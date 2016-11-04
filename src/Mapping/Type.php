@@ -19,7 +19,7 @@ class Type implements Annotation {
     /**
      * @return string
      */
-    public function getName(): string {
+    public function getName() {
         return $this->name;
     }
 
@@ -27,7 +27,7 @@ class Type implements Annotation {
      * @param string $name
      * @return Type
      */
-    public function setName(string $name) {
+    public function setName($name) {
         $this->name = $name;
         return $this;
     }
@@ -35,7 +35,7 @@ class Type implements Annotation {
     /**
      * @return string
      */
-    public function getIndex(): string {
+    public function getIndex() {
         return $this->index;
     }
 
@@ -43,10 +43,12 @@ class Type implements Annotation {
      * @param string $index
      * @return Type
      */
-    public function setIndex(string $index) {
+    public function setIndex($index) {
         $this->index = $index;
         return $this;
     }
+
+
 
     public function isValid() {
         return is_string($this->index) && is_string($this->name);

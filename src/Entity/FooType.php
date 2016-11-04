@@ -32,25 +32,37 @@ class FooType {
      */
     private $customField;
 
-    public function getCustomIdentifier(): int {
+    /**
+     * @return int
+     */
+    public function getCustomIdentifier() {
         return $this->customIdentifier;
     }
 
-    public function setCustomIdentifier(int $customIdentifier): FooType {
+    /**
+     * @param int $customIdentifier
+     * @return FooType
+     */
+    public function setCustomIdentifier($customIdentifier) {
         $this->customIdentifier = $customIdentifier;
         return $this;
     }
 
-    public function getCustomField(): string {
+    /**
+     * @return string
+     */
+    public function getCustomField() {
         return $this->customField;
     }
 
-    public function setCustomField(string $customField): FooType {
+    /**
+     * @param string $customField
+     * @return FooType
+     */
+    public function setCustomField($customField) {
         $this->customField = $customField;
         return $this;
     }
-
-
 
 }
 
