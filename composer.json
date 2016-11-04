@@ -1,0 +1,29 @@
+{
+    "name": "andsalves/doctrine-elastic",
+    "type": "library",
+    "description": "Elasticsearch Adaptation for Doctrine Object-Relational-Mapper for PHP",
+    "keywords": ["elastic", "doctrine", "elasticsearch", "orm", "search", "database"],
+    "homepage": "http://www.doctrine-project.org",
+    "authors": [
+        {"name": "Anderson Alves Nunes de Freitas", "email": "ands.alves.nunes@gmail.com"}
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "elasticsearch/elasticsearch": "^2.2",
+        "doctrine/orm": "^2.5",
+        "monolog/monolog": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "DoctrineElastic\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DoctrineElastic\\Tests\\": "tests/"
+        }
+    },
+    "archive": {
+        "exclude": ["!vendor", "tests", "*phpunit.xml", ".travis.yml", "build.xml", "build.properties", "composer.phar", "vendor/satooshi", "lib/vendor", "*.swp", "*coveralls.yml"]
+    }
+}
