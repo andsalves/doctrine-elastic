@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\Mapping\Column;
 use DoctrineElastic\Elastic\SearchParams;
-use DoctrineElastic\Mapping\ElasticTable;
+use DoctrineElastic\Mapping\Type;
 use DoctrineElastic\Service\ElasticSearchService;
 use Elasticsearch\Client;
 
@@ -31,23 +31,23 @@ class ElasticedEntityPersister extends EntityPersisterDecorator {
     }
 
     private function validateEntity(ClassMetadataInfo $classMetadata) {
-        $elasticTable = $this->annotationReader->getClassAnnotation($classMetadata->getReflectionClass(), ElasticTable::class);
-        if (!($elasticTable instanceof ElasticTable)) {
+        $type = $this->annotationReader->getClassAnnotation($classMetadata->getReflectionClass(), Type::class);
+        if (!($type instanceof Type)) {
             throw new AnnotationException(sprintf('Annotation %s is missing in %s entity class',
-                ElasticTable::class, $classMetadata->getName()));
+                Type::class, $classMetadata->getName()));
         }
 
-        if (!$elasticTable->isValid()) {
-            $errorMessage = $elasticTable->getErrorMessage() . ' in %s entity class';
+        if (!$type->isValid()) {
+            $errorMessage = $type->getErrorMessage() . ' in %s entity class';
             throw new AnnotationException(sprintf($errorMessage, $classMetadata->getName()));
         }
     }
 
     public function loadAll(array $criteria = [], array $orderBy = null, $limit = null, $offset = null) {
         $classMetadata = $this->wrapped->getClassMetadata();
-        /** @var ElasticTable $elasticTable */
-        $elasticTable = $this->annotationReader->getClassAnnotation(
-            $classMetadata->getReflectionClass(), ElasticTable::class
+        /** @var Type $type */
+        $type = $this->annotationReader->getClassAnnotation(
+            $classMetadata->getReflectionClass(), Type::class
         );
 
         $body = [];
@@ -62,8 +62,8 @@ class ElasticedEntityPersister extends EntityPersisterDecorator {
         }
 
         $searchParams = new SearchParams();
-        $searchParams->setIndex($elasticTable->getIndex());
-        $searchParams->setType($elasticTable->getType());
+        $searchParams->setIndex($type->getIndex());
+        $searchParams->setType($type->getName());
         $searchParams->setBody($body);
         $searchParams->setSize($limit);
 
