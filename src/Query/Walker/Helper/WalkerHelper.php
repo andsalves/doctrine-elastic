@@ -65,10 +65,8 @@ class WalkerHelper {
                     } else {
                         $boolField = 'must' . ($operator == OperatorsMap::EQ ? '' : '_not');
                         $itemSearch = array(
-                            'query_string' => array(
-                                'default_field' => $field,
-                                'default_operator' => 'AND',
-                                'query' => $value
+                            'match' => array(
+                                $field => $value
                             )
                         );
                         $bodyTemp['query']['bool'][$boolField][] = $itemSearch;
@@ -79,10 +77,8 @@ class WalkerHelper {
                     $boolField = 'must' . ($operator == OperatorsMap::LIKE ? '' : '_not');
                     $value = str_replace('%', '*', $value);
                     $itemSearch = array(
-                        'query_string' => array(
-                            'query' => $value,
-                            'default_field' => $field,
-                            'default_operator' => 'AND'
+                        'match' => array(
+                            $field => $value
                         )
                     );
                     $bodyTemp['query']['bool'][$boolField][] = $itemSearch;

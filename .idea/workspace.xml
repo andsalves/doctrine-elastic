@@ -2,14 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b94d7181-b713-4ec5-b73b-88b8c41a89de" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/Decorators/ElasticedEntityManager.php" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/Decorators/ElasticedUnitOfWork.php" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/Elastic/SearchParamsInterface.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Entity/FooType.php" afterPath="$PROJECT_DIR$/src/Entity/FooType.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Mapping/Type.php" afterPath="$PROJECT_DIR$/src/Mapping/Type.php" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Decorators/ElasticEntityManager.php" afterPath="$PROJECT_DIR$/src/Decorators/ElasticEntityManager.php" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Decorators/ElasticUnitOfWork.php" afterPath="$PROJECT_DIR$/src/Decorators/ElasticUnitOfWork.php" />
     </list>
     <ignored path="doctrine-elastic.iws" />
     <ignored path=".idea/workspace.xml" />
+    <ignored path=".idea/dataSources.local.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -202,12 +201,12 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1479226263786</updated>
-      <workItem from="1479226265679" duration="238000" />
+      <workItem from="1479226265679" duration="1442000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="238000" />
+    <option name="totallyTimeSpent" value="1442000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="28" width="1366" height="706" extended-state="6" />

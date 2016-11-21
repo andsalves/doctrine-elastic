@@ -30,7 +30,7 @@ class ElasticedUnitOfWork extends UnitOfWork {
     public function getEntityPersister($entityName) {
         $class = $this->em->getClassMetadata($entityName);
 
-        return new ElasticedEntityPersister($this->em, $class, $this->elastic);
+        return new ElasticedAbstractEntityPersister($this->em, $class, $this->elastic);
     }
 
     public function __call($name, $arguments) {

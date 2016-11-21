@@ -17,6 +17,12 @@ use DoctrineElastic\Mapping as ElasticORM;
 class FooType {
 
     /**
+     * @var string
+     * @ElasticORM\MetaField(name="_id")
+     */
+    public $_id;
+
+    /**
      * @var int
      *
      * @ORM\Column(name="id_conta", type="integer", nullable=false)
@@ -29,6 +35,7 @@ class FooType {
      * @var string
      *
      * @ORM\Column(name="nome_conta", type="string", length=100, nullable=false)
+     * @ElasticORM\Field(name="nome", type="text")
      */
     private $customField;
 

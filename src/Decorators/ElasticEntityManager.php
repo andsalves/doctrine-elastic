@@ -26,12 +26,25 @@ use Elasticsearch\Client;
  */
 class ElasticEntityManager implements EntityManagerInterface {
 
+    /** @var DefaultRepositoryFactory */
     protected $repositoryFactory;
+
+    /** @var Configuration */
     protected $config;
+
+    /** @var EventManager */
     protected $eventManager;
+
+    /** @var ElasticUnitOfWork */
     protected $unitOfWork;
+
+    /** @var Client */
     private $elastic;
+
+    /** @var ElasticSearchService */
     private $searchService;
+
+    /** @var ElasticConnection */
     protected $conn;
     /**
      * @var ElasticClassMetadataFactory
@@ -52,6 +65,9 @@ class ElasticEntityManager implements EntityManagerInterface {
         $this->searchService = new ElasticSearchService($elastic);
     }
 
+    /**
+     * @return ElasticUnitOfWork
+     */
     public function getUnitOfWork() {
         return $this->unitOfWork;
     }
@@ -82,6 +98,9 @@ class ElasticEntityManager implements EntityManagerInterface {
         // TODO: Implement getCache() method.
     }
 
+    /**
+     * @return ElasticConnection
+     */
     public function getConnection() {
         return $this->conn;
     }
@@ -164,7 +183,7 @@ class ElasticEntityManager implements EntityManagerInterface {
         // TODO: Implement getHydrator() method.
     }
 
-    public function newHydrator($hydrationMode) {
+    public function newHydrator($hydrationMode= null) {
         // TODO: Implement newHydrator() method.
     }
 
@@ -185,7 +204,7 @@ class ElasticEntityManager implements EntityManagerInterface {
     }
 
     public function persist($object) {
-        // TODO: Implement persist() method.
+        return $this->unitOfWork->persist($object);
     }
 
     public function remove($object) {
@@ -208,8 +227,8 @@ class ElasticEntityManager implements EntityManagerInterface {
         // TODO: Implement refresh() method.
     }
 
-    public function flush() {
-        // TODO: Implement flush() method.
+    public function flush($entity = null) {
+        $this->getUnitOfWork()->commit($entity);
     }
 
     public function getMetadataFactory() {
