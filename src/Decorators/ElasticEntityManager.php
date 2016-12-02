@@ -208,7 +208,7 @@ class ElasticEntityManager implements EntityManagerInterface {
     }
 
     public function remove($object) {
-        // TODO: Implement remove() method.
+        return $this->unitOfWork->delete($object);
     }
 
     public function merge($object) {

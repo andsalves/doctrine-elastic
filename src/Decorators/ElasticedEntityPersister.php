@@ -9,9 +9,11 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\GeneratedValue;
 use Doctrine\ORM\Mapping\MappingException;
 use DoctrineElastic\Elastic\FieldTypes;
 use DoctrineElastic\Elastic\SearchParams;
+use DoctrineElastic\Exception\ElasticConstraintException;
 use DoctrineElastic\Exception\ElasticOperationException;
 use DoctrineElastic\Hydrate\SimpleEntityHydrator;
 use DoctrineElastic\Mapping\Field;
@@ -156,6 +158,8 @@ class ElasticedEntityPersister extends AbstractEntityPersister {
             }
 
             $this->createTypeIfNotExists();
+
+            $this->checkIndentityConstraints($entity);
             $return = [];
 
             $inserted = $this->em->getConnection()->insert(
@@ -350,6 +354,42 @@ class ElasticedEntityPersister extends AbstractEntityPersister {
 
         if (isset($searchResult['_source'])) {
             $hydrator->hydrate($entity, $searchResult['_source'], $this->class);
+        }
+    }
+
+    public function delete($entity) {
+        $type = $this->getEntityType();
+        $return = [];
+
+        $deletion = $this->em->getConnection()->delete(
+            $type->getIndex(), $type->getName(), $this->getEntity_id($entity), [], $return
+        );
+
+        if ($deletion) {
+            return true;
+        } else {
+            throw new ElasticOperationException(sprintf('Unable to complete update operation, '
+                . 'with the following elastic return: <br><pre>%s</pre>', var_export($return)));
+        }
+    }
+
+    /**
+     * Check Identity values for entity, if there are identity fields,
+     * check if already exists items with such value (unique constraint verification)
+     *
+     * @param object $entity
+     * @throws ElasticConstraintException
+     */
+    private function checkIndentityConstraints($entity) {
+        $identities = $this->getClassMetadata()->getIdentifierValues($entity);
+
+        foreach ($identities as $property => $value) {
+            $element = $this->load([$property => $value]);
+
+            if (boolval($element)) {
+                throw new ElasticConstraintException(sprintf("Unique/IDENTITY field %s already has "
+                    . "a document with value '%s'", $property, $value));
+            }
         }
     }
 }

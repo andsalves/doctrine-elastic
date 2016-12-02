@@ -335,6 +335,11 @@ class ElasticUnitOfWork {
 
     }
 
+    public function delete($entity) {
+        $this->scheduleForDelete($entity);
+        $this->commitOrder[] = $this->em->getClassMetadata(get_class($entity));
+    }
+
     private function clearEntityDeletions($entity = null) {
         if ($entity === null) {
             $this->entityDeletions = [];

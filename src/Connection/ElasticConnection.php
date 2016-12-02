@@ -4,19 +4,31 @@ namespace DoctrineElastic\Connection;
 
 use Elasticsearch\Client;
 
+/**
+ * Default elastic connection class for general operations
+ *
+ * @author Ands
+ */
 class ElasticConnection implements ElasticConnectionInterface {
 
+    /** Override default elastic limit size query */
     const DEFAULT_MAX_RESULTS = 10000;
 
-    /**
-     * @var Client
-     */
+    /** @var Client */
     protected $elastic;
 
     public function __construct(Client $elastic) {
         $this->elastic = $elastic;
     }
 
+    /**
+     * @param string $index
+     * @param array|null $mappings
+     * @param array|null $settings
+     * @param array|null $aliases
+     * @param array|null $return
+     * @return bool
+     */
     public function createIndex(
         $index, array $mappings = null, array $settings = null, array $aliases = null, array &$return = null
     ) {
@@ -47,6 +59,11 @@ class ElasticConnection implements ElasticConnectionInterface {
         return false;
     }
 
+    /**
+     * @param string $index
+     * @param array|null $return
+     * @return bool
+     */
     public function deleteIndex($index, array &$return = null) {
         if (!$this->indexExists($index)) {
             throw new \InvalidArgumentException(sprintf("'%s' index does not exists", $index));
@@ -63,6 +80,13 @@ class ElasticConnection implements ElasticConnectionInterface {
         return false;
     }
 
+    /**
+     * @param string $index
+     * @param string $type
+     * @param array $mappings
+     * @param array|null $return
+     * @return bool
+     */
     public function createType($index, $type, array $mappings = [], array &$return = null) {
         if (!$this->indexExists($index)) {
             throw new \InvalidArgumentException(sprintf("%s' index does not exists", $index));
@@ -125,6 +149,15 @@ class ElasticConnection implements ElasticConnectionInterface {
         return false;
     }
 
+    /**
+     * @param string $index
+     * @param string $type
+     * @param string $_id
+     * @param array $body
+     * @param array $mergeParams
+     * @param array|null $return
+     * @return bool
+     */
     public function update($index, $type, $_id, array $body = [], array $mergeParams = [], array &$return = null) {
         if (!$this->indexExists($index)) {
             return false;
@@ -151,6 +184,14 @@ class ElasticConnection implements ElasticConnectionInterface {
         return false;
     }
 
+    /**
+     * @param string $index
+     * @param string $type
+     * @param string $_id
+     * @param array $mergeParams
+     * @param array|null $return
+     * @return bool
+     */
     public function delete($index, $type, $_id, array $mergeParams = [], array &$return = null) {
         if (!$this->indexExists($index)) {
             return false;
@@ -182,9 +223,17 @@ class ElasticConnection implements ElasticConnectionInterface {
         // TODO: Implement deleteWhere() method.
     }
 
+    /**
+     * @param string $index
+     * @param string $type
+     * @param string $_id
+     * @param array $mergeParams
+     * @param array|null $return
+     * @return array|null
+     */
     public function get($index, $type, $_id, array $mergeParams = [], array &$return = null) {
         if (!$this->indexExists($index)) {
-            return [];
+            return null;
         }
 
         $defaultParams = array(
@@ -212,6 +261,13 @@ class ElasticConnection implements ElasticConnectionInterface {
         return null;
     }
 
+    /**
+     * @param string $index
+     * @param string $type
+     * @param array $body
+     * @param array $mergeParams
+     * @return array
+     */
     public function search($index, $type, array $body = [], array $mergeParams = []) {
         if (!$this->indexExists($index)) {
             return [];
@@ -220,7 +276,6 @@ class ElasticConnection implements ElasticConnectionInterface {
         $defaultParams = array(
             'index' => $index,
             'type' => $type,
-            'refresh' => true,
             '_source' => true,
             'query_cache' => false,
             'request_cache' => false,
@@ -240,10 +295,19 @@ class ElasticConnection implements ElasticConnectionInterface {
         return [];
     }
 
+    /**
+     * @param string $index
+     * @return bool
+     */
     public function indexExists($index) {
         return $this->elastic->indices()->exists(['index' => $index]);
     }
 
+    /**
+     * @param string $index
+     * @param string $type
+     * @return array
+     */
     public function typeExists($index, $type) {
         return $this->elastic->indices()->existsType(array(
             'index' => $index,

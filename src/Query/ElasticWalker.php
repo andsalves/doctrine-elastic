@@ -57,7 +57,10 @@ class ElasticWalker {
 
         $this->walkSelectClause($AST->selectClause, $searchParams);
         $this->walkFromClause($AST->fromClause, $searchParams);
-        $this->walkWhereClause($AST->whereClause, $searchParams);
+
+        if ($AST->whereClause) {
+            $this->walkWhereClause($AST->whereClause, $searchParams);
+        }
 
         if ($AST->groupByClause) {
             $this->walkGroupByClause($AST->groupByClause, $searchParams);

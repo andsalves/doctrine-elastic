@@ -10,17 +10,18 @@ use Doctrine\ORM\Mapping\Annotation;
  */
 class Type implements Annotation {
 
+    protected static $defaultIndex = null;
+    protected static $defaultName = null;
+
     /** @var string */
     public $name;
 
     /** @var string */
     public $index;
 
-    /**
-     * @return string
-     */
+    /** @return string */
     public function getName() {
-        return $this->name;
+        return $this->name ?: self::getDefaultName();
     }
 
     /**
@@ -32,11 +33,9 @@ class Type implements Annotation {
         return $this;
     }
 
-    /**
-     * @return string
-     */
+    /** @return string */
     public function getIndex() {
-        return $this->index;
+        return $this->index ?: self::getDefaultIndex();
     }
 
     /**
@@ -48,10 +47,28 @@ class Type implements Annotation {
         return $this;
     }
 
+    /** @return null|string */
+    public static function getDefaultIndex() {
+        return self::$defaultIndex;
+    }
 
+    /** @param string $defaultIndex */
+    public static function setDefaultIndex($defaultIndex) {
+        self::$defaultIndex = $defaultIndex;
+    }
+
+    /** @return null|string */
+    public static function getDefaultName() {
+        return self::$defaultName;
+    }
+
+    /** @param null|string $defaultType */
+    public static function setDefaultName($defaultType) {
+        self::$defaultName = $defaultType;
+    }
 
     public function isValid() {
-        return is_string($this->index) && is_string($this->name);
+        return is_string($this->getIndex()) && is_string($this->getName());
     }
 
     public function getErrorMessage() {
