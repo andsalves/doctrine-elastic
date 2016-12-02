@@ -1,2 +1,2 @@
 # doctrine-elastic
-Adaptação do Doctrine ORM para Elastic Search
+Doctrine ORM Adaptation for Elasticsearch.
