@@ -6,12 +6,6 @@ use Doctrine\ORM\QueryBuilder;
 
 class ElasticQueryBuilder extends QueryBuilder {
 
-    public function createQuery($dql) {
-        $query = new ElasticQuery($this->getEntityManager());
-
-        return $query;
-    }
-
     /**
      * @return ElasticQuery
      */

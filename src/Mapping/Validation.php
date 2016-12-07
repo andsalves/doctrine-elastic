@@ -2,13 +2,13 @@
 
 namespace DoctrineElastic\Mapping;
 
-use Doctrine\ORM\Mapping\Annotation;
+use Doctrine\ORM\Mapping\Reflection\ReflectionPropertiesGetter;
 
 /**
  * @Annotation
  * @Target({"PROPERTY","ANNOTATION"})
  */
-class Field implements Annotation {
+class Validation implements Annotation {
 
     /** @var string */
     public $name;

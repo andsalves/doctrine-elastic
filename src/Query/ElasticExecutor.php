@@ -3,47 +3,39 @@
 namespace DoctrineElastic\Query;
 
 use Doctrine\ORM\Query\AST\SelectStatement;
-use DoctrineElastic\Decorators\ElasticEntityManager;
 use DoctrineElastic\Elastic\SearchParams;
 use DoctrineElastic\Hydrate\SimpleEntityHydrator;
 use DoctrineElastic\Service\ElasticSearchService;
 
 class ElasticExecutor {
 
-    /** @var SearchParams */
-    private $_searchParams;
+    /** @var SimpleEntityHydrator */
+    private $_hydrator;
 
-    /** @var SelectStatement */
-    private $_ast;
+    /** @var ElasticSearchService */
+    private $_searchService;
 
     /** @var string */
     private $_className;
 
-    /** @var SimpleEntityHydrator */
-    private $_hydrator;
+    public function __construct(ElasticSearchService $searchService, $className) {
+        $this->_searchService = $searchService;
+        $this->_hydrator = new SimpleEntityHydrator();
+        $this->_className = $className;
+    }
 
-    public function __construct(SearchParams $searchParams, SelectStatement $AST, $className) {
+    public function execute(SearchParams $searchParams) {
         if (!$searchParams->isValid()) {
             throw new \InvalidArgumentException('Elastic search params are invalid for request. ');
         }
 
-        $this->_searchParams = $searchParams;
-        $this->_ast = $AST;
-        $this->_className = $className;
-        $this->_hydrator = new SimpleEntityHydrator();
-    }
-
-    public function execute(
-        ElasticSearchService $searchService, ElasticEntityManager $em
-    ) {
-        $resultSets = $searchService->searchAsIterator($this->_searchParams)->getArrayCopy();
-        $results = [];
         $className = $this->_className;
-        $classMetadata = $em->getClassMetadata($className);
+        $resultSets = $this->_searchService->searchAsIterator($searchParams)->getArrayCopy();
+        $results = [];
 
         foreach ($resultSets as $resultSet) {
             $entity = new $className();
-            $this->_hydrator->hydrate($entity, $resultSet, $classMetadata);
+            $this->_hydrator->hydrate($entity, $resultSet);
             $results[] = $entity;
         }
 

@@ -6,6 +6,7 @@ namespace DoctrineElastic\Elastic;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\QueryException;
 use DoctrineElastic\Decorators\ElasticEntityManager;
+use DoctrineElastic\Event\QueryEventArgs;
 use DoctrineElastic\Query\ElasticParser;
 use DoctrineElastic\Query\ElasticParserResult;
 use DoctrineElastic\Service\ElasticSearchService;
@@ -14,9 +15,6 @@ class ElasticQuery {
 
     /** @var ElasticEntityManager */
     protected $entityManager;
-
-    /** @var ElasticParserResult */
-    private $parserResult;
 
     /** @var ElasticSearchService */
     protected $searchService;
@@ -33,17 +31,16 @@ class ElasticQuery {
     /** @var array */
     protected $_parameters;
 
-    public function __construct(EntityManagerInterface $entityManager, ElasticSearchService $searchService) {
+    public function __construct(ElasticEntityManager $entityManager) {
         $this->entityManager = $entityManager;
-        $this->searchService = $searchService;
+        $this->searchService = new ElasticSearchService($entityManager->getConnection());
     }
 
     public function getResult() {
-        $parserResult = $this->parse();
-        $executor = $parserResult->getElasticExecutor();
+        $parser = new ElasticParser($this);
+        $parserResult = $parser->parseElasticQuery();
 
-        // Prepare parameters
-        $paramMappings = $this->parserResult->getParameterMappings();
+        $paramMappings = $parserResult->getParameterMappings();
         $paramCount = count($this->_parameters);
         $mappingCount = count($paramMappings);
 
@@ -53,17 +50,16 @@ class ElasticQuery {
             throw QueryException::tooFewParameters($mappingCount, $paramCount);
         }
 
-        $data = $executor->execute($this->searchService, $this->entityManager);
+        $eventArgs = new QueryEventArgs($this);
+        $eventArgs->setAST($parser->getAST());
+        $this->getEntityManager()->getEventManager()->dispatchEvent(DoctrineElasticEvents::beforeQuery, $eventArgs);
 
-        return $data;
-    }
+        $results = $parserResult->getElasticExecutor()->execute($parserResult->getSearchParams());
 
-    private function parse() {
-        $parser = new ElasticParser($this, $this->entityManager);
+        $eventArgs->setResults($results);
+        $this->getEntityManager()->getEventManager()->dispatchEvent(DoctrineElasticEvents::postQuery, $eventArgs);
 
-        $this->parserResult = $parser->parseElasticQuery();
-
-        return $this->parserResult;
+        return $results;
     }
 
     public function getDQL() {

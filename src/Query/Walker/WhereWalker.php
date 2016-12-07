@@ -2,6 +2,7 @@
 
 namespace DoctrineElastic\Query\Walker;
 
+use Doctrine\DBAL\Query\QueryException;
 use Doctrine\ORM\Query\AST\ArithmeticExpression;
 use Doctrine\ORM\Query\AST\BetweenExpression;
 use Doctrine\ORM\Query\AST\ComparisonExpression;
@@ -18,6 +19,8 @@ use DoctrineElastic\Elastic\ElasticQuery;
 use DoctrineElastic\Elastic\SearchParams;
 use DoctrineElastic\Exception\InvalidOperatorException;
 use DoctrineElastic\Exception\InvalidParamsException;
+use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
+use DoctrineElastic\Mapping\Field;
 use DoctrineElastic\Query\Walker\Helper\WalkerHelper;
 
 class WhereWalker {
@@ -31,15 +34,23 @@ class WhereWalker {
     /** @var WalkerHelper */
     private $walkerHelper;
 
+    /** @var AnnotationEntityHydrator */
+    private $hydrator;
+
+    private $fieldAnnotations = [];
+
     public function __construct(ElasticQuery $query, $className, WalkerHelper $walkerHelper) {
         $this->query = $query;
         $this->className = $className;
         $this->walkerHelper = $walkerHelper;
+        $this->hydrator = new AnnotationEntityHydrator();
+
+        $this->fieldAnnotations = $this->hydrator->extractSpecAnnotations(new $className(), Field::class);
     }
 
     private function fetchTermsAndFactors(Node $node) {
         $terms = $factors = [];
-//die(var_dump($node));
+
         switch (get_class($node)) {
             case ConditionalTerm::class:
                 /** @var ConditionalTerm $node */
@@ -78,9 +89,6 @@ class WhereWalker {
         $termsAndFactors = ($this->fetchTermsAndFactors($conditionalExpr));
 
         $this->walkTermsAndFactors($termsAndFactors, $searchParams);
-//
-//        print '<pre>';
-//        die(print_r($searchParams->getBody()));
     }
 
     private function walkTermsAndFactors(array $termsAndFactors, $searchParams) {
@@ -176,8 +184,8 @@ class WhereWalker {
         /** @var Literal $valueExpr */
         $valueExpr = $rightExpr->simpleArithmeticExpression;
 
-        $column = $this->walkerHelper->getEntityColumn($pathExpr->field, $this->className, $this->query);
-        $field = $column->name;
+        $ESfield = $this->getFieldOrThrowError($pathExpr->field);
+        $field = $ESfield->name;
         $value = $valueExpr->value;
 
         $this->addBodyStatement($field, $operator, $value, $searchParams);
@@ -191,8 +199,8 @@ class WhereWalker {
         /** @var Literal $stringPattern */
         $stringPattern = $likeExpr->stringPattern;
 
-        $column = $this->walkerHelper->getEntityColumn($stringExpr->field, $this->className, $this->query);
-        $field = $column->name;
+        $ESField = $this->getFieldOrThrowError($stringExpr->field);
+        $field = $ESField->name;
         $value = $stringPattern->value;
 
         $this->addBodyStatement($field, $operator, $value, $searchParams);
@@ -217,8 +225,8 @@ class WhereWalker {
             $value1 = $lSimpleArithExpr->value;
             $value2 = $rSimpleArithExpr->value;
 
-            $column = $this->walkerHelper->getEntityColumn($fieldArithExpr->field, $this->className, $this->query);
-            $field = $column->name;
+            $ESField = $this->getFieldOrThrowError($fieldArithExpr->field);
+            $field = $ESField->name;
 
             $this->addBodyStatement($field, OperatorsMap::GTE, $value1, $searchParams);
             $this->addBodyStatement($field, OperatorsMap::LTE, $value2, $searchParams);
@@ -231,8 +239,8 @@ class WhereWalker {
         /** @var PathExpression $expr */
         $expr = $nullComExpr->expression;
 
-        $column = $this->walkerHelper->getEntityColumn($expr->field, $this->className, $this->query);
-        $field = $column->name;
+        $ESfield = $this->getFieldOrThrowError($expr->field);
+        $field = $ESfield->name;
         $operator = $nullComExpr->not ? OperatorsMap::NEQ : OperatorsMap::EQ;
 
         $this->addBodyStatement($field, $operator, null, $searchParams);
@@ -242,5 +250,21 @@ class WhereWalker {
         $body = $searchParams->getBody();
         $this->walkerHelper->addBodyStatement($field, $operator, $value, $body);
         $searchParams->setBody($body);
+    }
+
+    /**
+     * @param string $columnName
+     * @return Field
+     * @throws QueryException
+     */
+    private function getFieldOrThrowError($columnName) {
+        if (!isset($this->fieldAnnotations[$columnName])) {
+            throw new QueryException(sprintf(
+                "Unrecognized field '%s' in %s entity class. Does this column exist or have a Field Annotation?",
+                $columnName, $this->className
+            ));
+        }
+
+        return $this->fieldAnnotations[$columnName];
     }
 }

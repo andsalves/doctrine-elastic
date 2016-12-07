@@ -2,11 +2,15 @@
 
 namespace DoctrineElastic\Query;
 
+use DoctrineElastic\Elastic\SearchParams;
 
 class ElasticParserResult {
 
     /** @var ElasticExecutor */
     protected $executor;
+
+    /** @var SearchParams */
+    protected $searchParams;
 
     public function getElasticExecutor() {
         return $this->executor;
@@ -18,5 +22,19 @@ class ElasticParserResult {
 
     public function getParameterMappings() {
         return [];
+    }
+
+    /**
+     * @return SearchParams
+     */
+    public function getSearchParams() {
+        return $this->searchParams;
+    }
+
+    /**
+     * @param SearchParams $searchParams
+     */
+    public function setSearchParams(SearchParams $searchParams) {
+        $this->searchParams = $searchParams;
     }
 }

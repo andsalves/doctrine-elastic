@@ -2,7 +2,6 @@
 
 namespace DoctrineElastic\Query;
 
-use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Query\AST\FromClause;
 use Doctrine\ORM\Query\AST\GroupByClause;
 use Doctrine\ORM\Query\AST\HavingClause;
@@ -16,6 +15,7 @@ use DoctrineElastic\Elastic\SearchParams;
 use DoctrineElastic\Mapping\Type;
 use DoctrineElastic\Query\Walker\Helper\WalkerHelper;
 use DoctrineElastic\Query\Walker\WhereWalker;
+use DoctrineElastic\Service\ElasticSearchService;
 
 class ElasticWalker {
 
@@ -31,47 +31,55 @@ class ElasticWalker {
     /** @var WalkerHelper */
     private $walkerHelper;
 
-    public function __construct(ElasticQuery $query) {
+    /** @var SelectStatement */
+    private $_ast;
+
+    public function __construct(ElasticQuery $query, SelectStatement $AST) {
         $this->query = $query;
         $this->walkerHelper = new WalkerHelper();
+        $this->_ast = $AST;
+        $this->_className = $this->getRootClass();
     }
 
-    public function getExecutor(SelectStatement $AST) {
+    public function getExecutor() {
         if (!$this->executor) {
-            $searchParams = $this->walkSelectStatement($AST);
-            $this->executor = new ElasticExecutor($searchParams, $AST, $this->_className);
+            $searchService = new ElasticSearchService($this->query->getEntityManager()->getConnection());
+            $this->executor = new ElasticExecutor($searchService, $this->_className);
         }
 
         return $this->executor;
     }
 
     /**
-     * @param SelectStatement $AST
      * @return SearchParams
      */
-    private function walkSelectStatement(SelectStatement $AST) {
+    public function walkSelectStatement() {
         $searchParams = new SearchParams();
         $size = $this->query->getMaxResults();
         $offset = $this->query->getFirstResult();
-        $this->_className = $this->getRootClass($AST);
 
-        $this->walkSelectClause($AST->selectClause, $searchParams);
-        $this->walkFromClause($AST->fromClause, $searchParams);
+        $type = $this->getEntityElasticType($this->_className);
 
-        if ($AST->whereClause) {
-            $this->walkWhereClause($AST->whereClause, $searchParams);
+        $searchParams->setType($type->getName());
+        $searchParams->setIndex($type->getIndex());
+
+        $this->walkSelectClause($this->_ast->selectClause, $searchParams);
+        $this->walkFromClause($this->_ast->fromClause, $searchParams);
+
+        if ($this->_ast->whereClause) {
+            $this->walkWhereClause($this->_ast->whereClause, $searchParams);
         }
 
-        if ($AST->groupByClause) {
-            $this->walkGroupByClause($AST->groupByClause, $searchParams);
+        if ($this->_ast->groupByClause) {
+            $this->walkGroupByClause($this->_ast->groupByClause, $searchParams);
         }
 
-        if ($AST->havingClause) {
-            $this->walkHavingClause($AST->havingClause, $searchParams);
+        if ($this->_ast->havingClause) {
+            $this->walkHavingClause($this->_ast->havingClause, $searchParams);
         }
 
-        if ($AST->orderByClause) {
-            $this->walkOrderByClause($AST->orderByClause, $searchParams);
+        if ($this->_ast->orderByClause) {
+            $this->walkOrderByClause($this->_ast->orderByClause, $searchParams);
         }
 
         $searchParams->setSize($size);
@@ -81,15 +89,11 @@ class ElasticWalker {
     }
 
     private function walkSelectClause(SelectClause $selectClause, SearchParams $searchParams) {
-//        /** @var SelectExpression $selectExpressions */
-//        $selectExpressions = $selectClause->selectExpressions;
+
     }
 
     private function walkFromClause(FromClause $fromClause, SearchParams $searchParams) {
-        $type = $this->getEntityElasticType($this->_className);
 
-        $searchParams->setType($type->getName());
-        $searchParams->setIndex($type->getIndex());
     }
 
     private function walkWhereClause(WhereClause $whereClause, SearchParams $searchParams) {
@@ -109,10 +113,10 @@ class ElasticWalker {
         /** @var OrderByItem $item */
         foreach ($orderByClause->orderByItems as $item) {
             $order = $item->type;
-            $colunmName = $item->expression->field;
-            $column = $this->getEntityColumn($colunmName, $this->_className);
+            $propertyName = $item->expression->field;
+            $ESField = $this->walkerHelper->getEntityElasticField($propertyName, $this->_className, $this->query);
 
-            $searchParams->setSort([$column->name => strtolower($order)]);
+            $searchParams->setSort([$ESField->name => strtolower($order)]);
         }
     }
 
@@ -133,30 +137,11 @@ class ElasticWalker {
     }
 
     /**
-     * @param $propertyName
-     * @param $className
-     * @return Column
-     */
-    private function getEntityColumn($propertyName, $className) {
-        $classMetadata = $this->query->getEntityManager()->getClassMetadata($className);
-
-        $entityPersiter = $this->query->getEntityManager()->getUnitOfWork()
-            ->getEntityPersister($className);
-        /** @var Column $type */
-        $column = $entityPersiter->getAnnotionReader()
-            ->getPropertyAnnotation($classMetadata->getReflectionProperty($propertyName), Column::class);
-
-        return $column;
-    }
-
-    /**
-     * @param SelectStatement $AST
-     *
      * @return string
      */
-    private function getRootClass(SelectStatement $AST) {
+    private function getRootClass() {
         /** @var \Doctrine\ORM\Query\AST\IdentificationVariableDeclaration[] $identificationVariableDeclarations */
-        $identificationVariableDeclarations = $AST->fromClause->identificationVariableDeclarations;
+        $identificationVariableDeclarations = $this->_ast->fromClause->identificationVariableDeclarations;
 
         foreach ($identificationVariableDeclarations as $idVarDeclaration) {
             if ($idVarDeclaration->rangeVariableDeclaration->isRoot) {

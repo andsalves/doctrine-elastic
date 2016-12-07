@@ -7,14 +7,13 @@ use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
-use Doctrine\ORM\Mapping\Column;
-use Doctrine\ORM\Mapping\GeneratedValue;
 use Doctrine\ORM\Mapping\MappingException;
-use DoctrineElastic\Elastic\FieldTypes;
+use DoctrineElastic\Elastic\DoctrineElasticEvents;
 use DoctrineElastic\Elastic\SearchParams;
+use DoctrineElastic\Event\EntityEventArgs;
 use DoctrineElastic\Exception\ElasticConstraintException;
 use DoctrineElastic\Exception\ElasticOperationException;
+use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
 use DoctrineElastic\Hydrate\SimpleEntityHydrator;
 use DoctrineElastic\Mapping\Field;
 use DoctrineElastic\Mapping\MetaField;
@@ -33,55 +32,36 @@ class ElasticedEntityPersister extends AbstractEntityPersister {
     /** @var array */
     protected $queuedInserts = [];
 
-    /** @var SimpleEntityHydrator */
+    /** @var AnnotationEntityHydrator */
     private $hydrator;
 
-    public function __construct(EntityManagerInterface $em, ClassMetadata $class, Client $elastic) {
+    public function __construct(ElasticEntityManager $em, ClassMetadata $class, Client $elastic) {
         parent::__construct($em, $class, $elastic);
         $this->annotationReader = new AnnotationReader();
-        $this->elasticSearchService = new ElasticSearchService($elastic);
-        $this->hydrator = new SimpleEntityHydrator();
-        $this->validateEntity($class);
+        $this->elasticSearchService = new ElasticSearchService($em->getConnection());
+        $this->hydrator = new AnnotationEntityHydrator();
+        $this->validateEntity($class->name);
     }
 
-    private function validateEntity(ClassMetadataInfo $classMetadata) {
-        $type = $this->annotationReader->getClassAnnotation($classMetadata->getReflectionClass(), Type::class);
-        $className = $classMetadata->name;
+    private function validateEntity($className) {
+        $type = $this->annotationReader->getClassAnnotation($this->class->getReflectionClass(), Type::class);
 
         if (!($type instanceof Type)) {
-            throw new AnnotationException(sprintf('Annotation %s is missing in %s entity class',
-                Type::class, $classMetadata->getName()));
+            throw new AnnotationException(sprintf('%s annotation is missing for %s entity class',
+                Type::class, get_class()));
         }
 
         if (!$type->isValid()) {
-            $errorMessage = $type->getErrorMessage() . ' in %s entity class';
-            throw new AnnotationException(sprintf($errorMessage, $classMetadata->getName()));
+            $errorMessage = $type->getErrorMessage() . ' for %s entity class';
+            throw new AnnotationException(sprintf($errorMessage, $className));
         }
 
-        $metaFields = $this->getAnnotationsProperties(MetaField::class);
-        $has_id = false;
-
-        foreach ($metaFields as $propertyName => $metaField) {
-            if ($metaField->name == '_id') {
-                if ($propertyName != '_id') {
-                    throw new AnnotationException('_id field must have same name for propertyName');
-                }
-
-                $reflectionProperty = $classMetadata->getReflectionProperty($propertyName);
-                if ($reflectionProperty->isPublic()
-                    || method_exists(new $className(), 'set_id')
-                ) {
-                    $has_id = true;
-                } else {
-                    $errorMessage = '_id metaField must to be public or have a set_id method';
-                    throw new AnnotationException(sprintf($errorMessage, $classMetadata->getName()));
-                }
-            }
-        }
+        $_idSearch = $this->hydrator->extractWithAnnotation(new $className(), MetaField::class);
+        $has_id = !empty($_idSearch);
 
         if (!$has_id) {
             $errorMessage = '_id metaField is missing in %s entity class';
-            throw new AnnotationException(sprintf($errorMessage, $classMetadata->getName()));
+            throw new AnnotationException(sprintf($errorMessage, $className));
         }
     }
 
@@ -102,7 +82,7 @@ class ElasticedEntityPersister extends AbstractEntityPersister {
         $body = ['query' => ['bool' => ['must' => $must]]];
 
         foreach ($classMetadata->getReflectionProperties() as $propertyName => $reflectionProperty) {
-            $annotationProperty = $this->annotationReader->getPropertyAnnotation($reflectionProperty, Column::class);
+            $annotationProperty = $this->annotationReader->getPropertyAnnotation($reflectionProperty, Field::class);
 
             if (isset($criteria[$propertyName])) {
                 $must[] = array(
@@ -133,7 +113,7 @@ class ElasticedEntityPersister extends AbstractEntityPersister {
 
         foreach ($arrayResults as $arrayResult) {
             $entity = new $className();
-            $results[] = $this->hydrator->hydrate($entity, $arrayResult, $classMetadata);
+            $results[] = $this->hydrator->hydrate($entity, $arrayResult);
         }
 
         return $results;
@@ -146,11 +126,14 @@ class ElasticedEntityPersister extends AbstractEntityPersister {
     public function executeInserts() {
         foreach ($this->queuedInserts as $entity) {
             $type = $this->getEntityType();
+            $entityCopy = clone $entity;
 
-            $classMetadata = $this->getClassMetadata();
+            $this->em->getEventManager()->dispatchEvent(
+                DoctrineElasticEvents::beforeInsert, new EntityEventArgs($entityCopy)
+            );
 
-            $fieldsData = $this->hydrator->extract($entity, $classMetadata, Field::class);
-            $metaFieldsData = $this->hydrator->extract($entity, $classMetadata, MetaField::class);
+            $fieldsData = $this->hydrator->extractWithAnnotation($entityCopy, Field::class);
+            $metaFieldsData = $this->hydrator->extractWithAnnotation($entityCopy, MetaField::class);
             $mergeParams = [];
 
             if (isset($metaFieldsData['_id'])) {
@@ -159,7 +142,7 @@ class ElasticedEntityPersister extends AbstractEntityPersister {
 
             $this->createTypeIfNotExists();
 
-            $this->checkIndentityConstraints($entity);
+            $this->checkIndentityConstraints($entityCopy);
             $return = [];
 
             $inserted = $this->em->getConnection()->insert(
@@ -167,7 +150,10 @@ class ElasticedEntityPersister extends AbstractEntityPersister {
             );
 
             if ($inserted) {
-                $this->hydrateEntityBySearchResult($entity, $return);
+                $this->hydrateEntityByResult($entity, $return);
+                $this->em->getEventManager()->dispatchEvent(
+                    DoctrineElasticEvents::postInsert, new EntityEventArgs($entity)
+                );
             } else {
                 throw new ElasticOperationException(sprintf('Unable to complete update operation, '
                     . 'with the following elastic return: <br><pre>%s</pre>', var_export($return)));
@@ -176,115 +162,42 @@ class ElasticedEntityPersister extends AbstractEntityPersister {
         }
     }
 
-    private function getEntity_id($entity) {
-        /** @var MetaField[] $metaFields */
-        $metaFields = $this->getAnnotationsProperties(MetaField::class);
-
-        foreach ($metaFields as $propertyName => $metaField) {
-            if ($metaField->name == '_id') {
-                $getMethod = 'get' . ucfirst($propertyName);
-                if (method_exists($entity, $getMethod)) {
-                    return $entity->$getMethod();
-                } else {
-                    $reflectionProperty = $this->class->getReflectionProperty($propertyName);
-                    if ($reflectionProperty->isPublic()) {
-                        return $entity->$propertyName;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
     public function update($entity) {
         $type = $this->getEntityType();
-
-        $classMetadata = $this->getClassMetadata();
-
-        $dataUpdate = [];
-        $entityData = $this->hydrator->extract($entity, $classMetadata);
-        $fields = $this->getAnnotationsProperties(Field::class);
-
-        foreach ($fields as $field) {
-            if (isset($entityData[$field->name])) {
-                $dataUpdate[$field->name] = $entityData[$field->name];
-            }
-        }
-
-        $_id = $this->getEntity_id($entity);
-
+        $dataUpdate = $this->hydrator->extractWithAnnotation($entity, Field::class);
+        $_id = $this->hydrator->extract($entity, '_id');
         $return = [];
+
         $updated = $this->em->getConnection()->update(
             $type->getIndex(), $type->getName(), $_id, $dataUpdate, [], $return
         );
 
         if ($updated) {
-            $metaFields = $this->getAnnotationsProperties(MetaField::class);
-
-            foreach ($metaFields as $propertyName => $metaField) {
-                if (isset($return[$metaField->name])) {
-                    $reflectionProperty = $classMetadata->getReflectionProperty($propertyName);
-                    if ($reflectionProperty->isPublic()) {
-                        $entity->$propertyName = $return[$metaField->name];
-                    } else {
-                        $setMethod = 'set' . ucfirst($propertyName);
-                        if (method_exists($entity, $setMethod)) {
-                            $entity->$setMethod($return[$metaField->name]);
-                        }
-                    }
-                }
-            }
+            $this->hydrateEntityByResult($entity, $return);
         } else {
             throw new ElasticOperationException(sprintf('Unable to complete update operation, '
                 . 'with the following elastic return: <br><pre>%s</pre>', var_export($return)));
         }
     }
 
-    private function getAnnotationsProperties($annotationClass) {
-        $classMetadata = $this->getClassMetadata();
-        $annotations = [];
-
-        foreach ($classMetadata->getReflectionProperties() as $propertyName => $reflectionProperty) {
-            $annotation = $this->annotationReader->getPropertyAnnotation($reflectionProperty, $annotationClass);
-
-            if ($annotation instanceof $annotationClass) {
-                $annotations[$propertyName] = $annotation;
-            }
-        }
-
-        return $annotations;
-    }
-
     private function createTypeIfNotExists() {
         $type = $this->getEntityType();
         $indexName = $type->getIndex();
         $typeName = $type->getName();
-        $classMetadata = $this->getClassMetadata();
+        $className = $this->class->reflClass->name;
 
         if (!$this->em->getConnection()->typeExists($indexName, $typeName)) {
             $propertiesMapping = [];
+            /** @var Field[] $ESFields */
+            $ESFields = $this->hydrator->extractSpecAnnotations(new $className(), Field::class);
 
-            foreach ($classMetadata->getReflectionProperties() as $propertyName => $reflectionProperty) {
-                /** @var MetaField $ESMetaField */
-                $ESMetaField = $this->annotationReader->getPropertyAnnotation($reflectionProperty, MetaField::class);
-
-                if ($ESMetaField instanceof MetaField) {
-                    continue;
-                }
-
-                /** @var Column $column */
-                $column = $this->annotationReader->getPropertyAnnotation($reflectionProperty, Column::class);
-                /** @var Field $ESField */
-                $ESField = $this->annotationReader->getPropertyAnnotation($reflectionProperty, Field::class);
-                $fieldType = FieldTypes::doctrineToElastic($column->type);
-
-                $propertiesMapping[$column->name] = ['type' => $fieldType];
-
+            foreach ($ESFields as $ESField) {
                 if ($ESField instanceof Field) {
+                    $propertiesMapping[$ESField->name] = ['type' => $ESField->type];
+
                     foreach ($ESField->getArrayCopy() as $prop => $propValue) {
                         if (!is_null($propValue) && $prop != 'name') {
-                            $propertiesMapping[$column->name][$prop] = $propValue;
+                            $propertiesMapping[$ESField->name][$prop] = $propValue;
                         }
                     }
                 }
@@ -308,7 +221,6 @@ class ElasticedEntityPersister extends AbstractEntityPersister {
         $oid = spl_object_hash($entity);
         $this->queuedInserts[$oid] = $entity;
     }
-
 
     /**
      * @return Type
@@ -339,7 +251,7 @@ class ElasticedEntityPersister extends AbstractEntityPersister {
 
         if ($documentData) {
             $entity = is_object($entity) ? $entity : new $this->class->name;
-            $this->hydrateEntityBySearchResult($entity, $documentData);
+            $this->hydrateEntityByResult($entity, $documentData);
 
             return $entity;
         }
@@ -347,22 +259,23 @@ class ElasticedEntityPersister extends AbstractEntityPersister {
         return null;
     }
 
-    private function hydrateEntityBySearchResult($entity, array $searchResult) {
+    private function hydrateEntityByResult($entity, array $searchResult) {
         $hydrator = new SimpleEntityHydrator();
 
-        $hydrator->hydrate($entity, $searchResult, $this->class);
+        $hydrator->hydrate($entity, $searchResult);
 
         if (isset($searchResult['_source'])) {
-            $hydrator->hydrate($entity, $searchResult['_source'], $this->class);
+            $hydrator->hydrate($entity, $searchResult['_source']);
         }
     }
 
     public function delete($entity) {
         $type = $this->getEntityType();
         $return = [];
+        $_id = $this->hydrator->extract($entity, '_id');
 
         $deletion = $this->em->getConnection()->delete(
-            $type->getIndex(), $type->getName(), $this->getEntity_id($entity), [], $return
+            $type->getIndex(), $type->getName(), $_id, [], $return
         );
 
         if ($deletion) {

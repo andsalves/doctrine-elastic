@@ -3,20 +3,19 @@
 namespace DoctrineElastic\Decorators;
 
 use Doctrine\Common\EventManager;
-use Doctrine\Common\Persistence\Mapping\AbstractClassMetadataFactory;
-use Doctrine\DBAL\Connection;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\ClassMetadataFactory;
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
-use Doctrine\ORM\Query;
+use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\ResultSetMapping;
-use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Repository\DefaultRepositoryFactory;
 use DoctrineElastic\Connection\ElasticConnection;
+use DoctrineElastic\Elastic\DoctrineElasticEvents;
 use DoctrineElastic\Elastic\ElasticQuery;
 use DoctrineElastic\Elastic\ElasticQueryBuilder;
-use DoctrineElastic\Elastic\QueryBuilderProxy;
+use DoctrineElastic\Listener\DeleteListener;
+use DoctrineElastic\Listener\InsertListener;
+use DoctrineElastic\Listener\QueryListener;
+use DoctrineElastic\Listener\UpdateListener;
 use DoctrineElastic\Mapping\ElasticClassMetadataFactory;
 use DoctrineElastic\Service\ElasticSearchService;
 use Elasticsearch\Client;
@@ -37,6 +36,9 @@ class ElasticEntityManager implements EntityManagerInterface {
 
     /** @var ElasticUnitOfWork */
     protected $unitOfWork;
+
+    /** @var Expr */
+    protected $expressionBuilder;
 
     /** @var Client */
     private $elastic;
@@ -62,7 +64,30 @@ class ElasticEntityManager implements EntityManagerInterface {
         $this->repositoryFactory = new DefaultRepositoryFactory();
         $this->unitOfWork = new ElasticUnitOfWork($this, $elastic);
         $this->elastic = $elastic;
-        $this->searchService = new ElasticSearchService($elastic);
+        $this->searchService = new ElasticSearchService($this->conn);
+        $this->registerEventsListeners();
+    }
+
+    private function registerEventsListeners() {
+        $this->getEventManager()->addEventListener(array(
+            DoctrineElasticEvents::beforeInsert,
+            DoctrineElasticEvents::postInsert,
+        ), new InsertListener());
+
+        $this->getEventManager()->addEventListener(array(
+            DoctrineElasticEvents::beforeDelete,
+            DoctrineElasticEvents::postDelete,
+        ), new DeleteListener());
+
+        $this->getEventManager()->addEventListener(array(
+            DoctrineElasticEvents::beforeDelete,
+            DoctrineElasticEvents::postDelete,
+        ), new UpdateListener());
+
+        $this->getEventManager()->addEventListener(array(
+            DoctrineElasticEvents::beforeQuery,
+            DoctrineElasticEvents::postQuery,
+        ), new QueryListener());
     }
 
     /**
@@ -106,7 +131,11 @@ class ElasticEntityManager implements EntityManagerInterface {
     }
 
     public function getExpressionBuilder() {
-        // TODO: Implement getExpressionBuilder() method.
+        if ($this->expressionBuilder === null) {
+            $this->expressionBuilder = new Expr();
+        }
+
+        return $this->expressionBuilder;
     }
 
     public function beginTransaction() {
@@ -126,7 +155,7 @@ class ElasticEntityManager implements EntityManagerInterface {
     }
 
     public function createQuery($dql = '') {
-        $query = new ElasticQuery($this, $this->searchService);
+        $query = new ElasticQuery($this);
 
         if (!empty($dql)) {
             $query->setDQL($dql);
@@ -183,7 +212,7 @@ class ElasticEntityManager implements EntityManagerInterface {
         // TODO: Implement getHydrator() method.
     }
 
-    public function newHydrator($hydrationMode= null) {
+    public function newHydrator($hydrationMode = null) {
         // TODO: Implement newHydrator() method.
     }
 

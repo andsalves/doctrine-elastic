@@ -72,14 +72,14 @@ class Type implements Annotation {
     }
 
     public function getErrorMessage() {
-        $baseMessage = "'%s' property wasn't set in %s Annotation";
+        $baseMessage = "'%s' property wasn't set in %s annotation";
 
         if (!is_string($this->index)) {
-            return sprintf($baseMessage, 'index', self::class);
+            return sprintf($baseMessage, 'index', get_class($this));
         }
 
         if (!is_string($this->name)) {
-            return sprintf($baseMessage, 'name', self::class);
+            return sprintf($baseMessage, 'name', get_class($this));
         }
 
         return null;

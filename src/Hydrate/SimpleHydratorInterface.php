@@ -7,15 +7,14 @@ interface SimpleHydratorInterface {
     /**
      * @param object $entity
      * @param array|mixed $data
-     * @param mixed $metadata
      * @return object
      */
-    public function hydrate($entity, $data, $metadata = null);
+    public function hydrate($entity, array $data);
 
     /**
      * @param $object
-     * @param mixed $metadata
+     * @param $fieldOrFields
      * @return array
      */
-    public function extract($object, $metadata = null);
+    public function extract($object, $fieldOrFields = null);
 }

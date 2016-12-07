@@ -2,6 +2,7 @@
 
 namespace DoctrineElastic\Service;
 
+use DoctrineElastic\Connection\ElasticConnectionInterface;
 use DoctrineElastic\Elastic\SearchParams;
 use DoctrineElastic\Elastic\SearchParser;
 use Elasticsearch\Client;
@@ -11,8 +12,8 @@ class ElasticSearchService {
     /** @var Client */
     private $elastic;
 
-    public function __construct(Client $elastic) {
-        $this->elastic = $elastic;
+    public function __construct(ElasticConnectionInterface $elasticConnection) {
+        $this->elastic = $elasticConnection->getElasticClient();
     }
 
     /**

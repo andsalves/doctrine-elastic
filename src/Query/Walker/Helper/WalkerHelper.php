@@ -2,9 +2,9 @@
 
 namespace DoctrineElastic\Query\Walker\Helper;
 
-use Doctrine\ORM\Mapping\Column;
 use DoctrineElastic\Elastic\ElasticQuery;
-use DoctrineElastic\Elastic\InvalidOperatorException;
+use DoctrineElastic\Exception\InvalidOperatorException;
+use DoctrineElastic\Mapping\Field;
 use DoctrineElastic\Query\Walker\OperatorsMap;
 
 class WalkerHelper {
@@ -77,7 +77,7 @@ class WalkerHelper {
                     $boolField = 'must' . ($operator == OperatorsMap::LIKE ? '' : '_not');
                     $value = str_replace('%', '*', $value);
                     $itemSearch = array(
-                        'match' => array(
+                        'wildcard' => array(
                             $field => $value
                         )
                     );
@@ -95,17 +95,17 @@ class WalkerHelper {
      * @param $propertyName
      * @param $className
      * @param ElasticQuery $query
-     * @return Column
+     * @return Field
      */
-    public function getEntityColumn($propertyName, $className, ElasticQuery $query) {
+    public function getEntityElasticField($propertyName, $className, ElasticQuery $query) {
         $classMetadata = $query->getEntityManager()->getClassMetadata($className);
 
         $entityPersiter = $query->getEntityManager()->getUnitOfWork()
             ->getEntityPersister($className);
-        /** @var Column $type */
-        $column = $entityPersiter->getAnnotionReader()
-            ->getPropertyAnnotation($classMetadata->getReflectionProperty($propertyName), Column::class);
+        /** @var Field $type */
+        $field = $entityPersiter->getAnnotionReader()
+            ->getPropertyAnnotation($classMetadata->getReflectionProperty($propertyName), Field::class);
 
-        return $column;
+        return $field;
     }
 }

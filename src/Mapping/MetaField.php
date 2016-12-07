@@ -18,10 +18,10 @@ class MetaField implements Annotation {
     }
 
     public function getErrorMessage() {
-        $baseMessage = "'%s' property wasn't set in %s Annotation";
+        $baseMessage = "'%s' property wasn't set in %s annotation";
 
         if (!is_string($this->name)) {
-            return sprintf($baseMessage, 'name', self::class);
+            return sprintf($baseMessage, 'name', get_class($this));
         }
 
         return null;

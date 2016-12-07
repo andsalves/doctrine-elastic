@@ -2,10 +2,8 @@
 
 namespace DoctrineElastic\Query;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Parser;
-use Doctrine\ORM\Query\TreeWalkerChain;
 use DoctrineElastic\Elastic\ElasticQuery;
 
 class ElasticParser {
@@ -16,25 +14,33 @@ class ElasticParser {
     /** @var Parser */
     private $doctrineParser;
 
-    /**v@var ElasticParserResult */
-    private $parserResult;
+    /** @var Query\AST\SelectStatement */
+    private $_ast;
 
-    public function __construct(ElasticQuery $query, EntityManagerInterface $entityManager) {
+    public function __construct(ElasticQuery $query) {
         $this->query = $query;
-        $doctrineQuery = new Query($entityManager);
+        $doctrineQuery = new Query($query->getEntityManager());
         $doctrineQuery->setDQL($query->getDQL());
         $this->doctrineParser = new Parser($doctrineQuery);;
-        $this->parserResult = new ElasticParserResult();
+    }
+
+    public function getAST() {
+        if (is_null($this->_ast)) {
+            $this->_ast = $this->doctrineParser->QueryLanguage();
+        }
+
+        return $this->_ast;
     }
 
     public function parseElasticQuery() {
-        $AST = $this->doctrineParser->getAST();
+        $parserResult = new ElasticParserResult();
 
-        $outputWalker = new ElasticWalker($this->query, $this->parserResult);
+        $outputWalker = new ElasticWalker($this->query, $this->getAST());
+        $searchParams = $outputWalker->walkSelectStatement();
 
-        // Assign an SQL executor to the parser result
-        $this->parserResult->setElasticExecutor($outputWalker->getExecutor($AST));
+        $parserResult->setElasticExecutor($outputWalker->getExecutor());
+        $parserResult->setSearchParams($searchParams);
 
-        return $this->parserResult;
+        return $parserResult;
     }
 }

@@ -29,36 +29,26 @@ class FieldTypes {
     const ATTACHMENT = 'attachment';
 
 
-    public static $doctrineToElastic = array(
-        'string' => self::STRING,
-        'text' => self::TEXT,
-        'guid' => self::TEXT,
-        'binary' => self::BINARY,
-        'integer' => self::INTEGER,
-        'smallint' => self::INTEGER,
-        'bigint' => self::INTEGER,
-        'decimal' => self::DOUBLE,
-        'float' => self::FLOAT,
-        'double' => self::DOUBLE,
-        'blob' => self::TEXT,
-        'boolean' => self::BOOLEAN,
-        'date' => self::DATE,
-        'datetime' => self::DATE,
-        'datetimetz' => self::DATE,
-        'time' => self::DATE,
-        'dateinterval' => self::STRING,
-        'array' => self::NESTED,
-        'simple_array' => self::NESTED,
-        'json' => self::NESTED,
-        'json_array' => self::NESTED,
-        'object' => self::OBJECT,
+    public static $types = array(
+        self::STRING,
+        self::TEXT,
+        self::KEYWORD,
+        self::LONG,
+        self::INTEGER,
+        self::SHORT,
+        self::BYTE,
+        self::DOUBLE,
+        self::FLOAT,
+        self::DATE,
+        self::BOOLEAN,
+        self::BINARY,
+        self::OBJECT,
+        self::NESTED,
+        self::GEO_POINT,
+        self::GEO_SHAPE,
+        self::IP,
+        self::COMPLETION,
+        self::MURMUR3,
+        self::ATTACHMENT
     );
-
-    public static function doctrineToElastic($doctrineType) {
-        if (isset(self::$doctrineToElastic[$doctrineType])) {
-            return self::$doctrineToElastic[$doctrineType];
-        }
-
-        throw new \InvalidArgumentException("Doctrine type '$doctrineType' was not found for conversion. ");
-    }
 }
