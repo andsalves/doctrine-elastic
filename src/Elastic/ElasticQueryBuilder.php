@@ -3,6 +3,7 @@
 namespace DoctrineElastic\Elastic;
 
 use Doctrine\ORM\QueryBuilder;
+use DoctrineElastic\Exception\ElasticOperationException;
 
 class ElasticQueryBuilder extends QueryBuilder {
 
@@ -21,4 +22,47 @@ class ElasticQueryBuilder extends QueryBuilder {
         return $query;
     }
 
+    public function select($select = null) {
+        if (strstr($select, '.')) {
+            throw new ElasticOperationException('Not supported operation: Select specific fields');
+        }
+
+        return parent::select($select);
+    }
+
+    public function innerJoin($join, $alias, $conditionType = null, $condition = null, $indexBy = null) {
+        throw new ElasticOperationException('Not supported operation: ' . __FUNCTION__);
+    }
+
+    public function groupBy($groupBy) {
+        throw new ElasticOperationException('Not supported operation: ' . __FUNCTION__);
+    }
+
+    public function addGroupBy($groupBy) {
+        throw new ElasticOperationException('Not supported operation: ' . __FUNCTION__);
+    }
+
+    public function having($having) {
+        throw new ElasticOperationException('Not supported operation: ' . __FUNCTION__);
+    }
+
+    public function addSelect($select = null) {
+        throw new ElasticOperationException('Not supported operation: ' . __FUNCTION__);
+    }
+
+    public function andHaving($having) {
+        throw new ElasticOperationException('Not supported operation: ' . __FUNCTION__);
+    }
+
+    public function join($join, $alias, $conditionType = null, $condition = null, $indexBy = null) {
+        throw new ElasticOperationException('Not supported operation: ' . __FUNCTION__);
+    }
+
+    public function distinct($flag = true) {
+        throw new ElasticOperationException('Not supported operation: ' . __FUNCTION__);
+    }
+
+    public function leftJoin($join, $alias, $conditionType = null, $condition = null, $indexBy = null) {
+        throw new ElasticOperationException('Not supported operation: ' . __FUNCTION__);
+    }
 }

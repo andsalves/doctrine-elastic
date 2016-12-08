@@ -24,9 +24,6 @@ class QueryListener {
     /** @var AnnotationEntityHydrator */
     protected $hydrator;
 
-    private $fieldRel;
-    private $fieldOrigin;
-
     public function __construct() {
         $this->hydrator = new AnnotationEntityHydrator();
     }
@@ -37,20 +34,20 @@ class QueryListener {
 
     public function postQuery(QueryEventArgs $eventArgs) {
         $results = $eventArgs->getResults();
-        $AST = $eventArgs->getAST();
-//        print '<pre>';
-//
-//        print_r($AST);
-        if (!empty($results) && !is_null($AST)) {
-            $this->executeRelationshipQueries($eventArgs->getQuery(), $AST, $results);
-//            $this->executeJoinQueries($eventArgs->getQuery(), $AST, $results);
-            $eventArgs->setResults($results);
-        }
+        $entityManager = $eventArgs->getEntityManager();
+        $targetEntity = $eventArgs->getTargetEntity();
 
-//        die;
+        if (!empty($results) && $entityManager && $targetEntity) {
+            $this->executeRelationshipQueries($eventArgs);
+        }
     }
 
-    private function executeRelationshipQueries($entity, SelectStatement $AST, array &$results) {
+    private function executeRelationshipQueries(QueryEventArgs $eventArgs) {
+        $targetClass = $eventArgs->getTargetEntity();
+        $entity = new $targetClass();
+        $entityManager = $eventArgs->getEntityManager();
+        $results = $eventArgs->getResults();
+
         /** @var ManyToOne[] $manyToOnes */
         $manyToOnes = $this->hydrator->extractSpecAnnotations($entity, ManyToOne::class);
         /** @var JoinColumns[] $joinsColumns */
@@ -61,118 +58,23 @@ class QueryListener {
                 continue;
             }
 
-            /** @var JoinColumn $joinColumns */
-            foreach ($joinsColumns as $joinColumns) {
-                $fieldName = $joinColumns->referencedColumnName;
-            }
-        }
-
-    }
-
-    /**
-     * @param ElasticQuery $parentQuery
-     * @param SelectStatement $AST
-     * @param array $results
-     *
-     */
-    private function executeJoinQueries(ElasticQuery $parentQuery, SelectStatement $AST, array &$results) {
-        /** @var IdentificationVariableDeclaration[] $idVariableDeclarations */
-        $idVariableDeclarations = $AST->fromClause->identificationVariableDeclarations;
-
-        foreach ($idVariableDeclarations as $vdeclaration) {
-            /** @var Join[] $joins */
-            $joins = $vdeclaration->joins;
-            $parentAlias = $vdeclaration->rangeVariableDeclaration->aliasIdentificationVariable;
-
-            foreach ($joins as $join) {
-                $joinQueryBuilder = $this->convertJoinToQueryBuilder(
-                    $join, $parentQuery->getEntityManager(), $results, $parentAlias
-                );
-
-                if ($this->fieldRel && $this->fieldOrigin) {
-                    $joinResults = $joinQueryBuilder->getQuery()->getResult();
-                    $joinResultsAssoc = [];
-
-                    foreach ($joinResults as $joinResult) {
-                        $joinValue = $this->hydrator->extract($joinResult, $this->fieldRel);
-                        if ($joinValue) {
-                            $joinResultsAssoc[$joinValue] = $joinResult;
-                        }
-                    }
-
-                    foreach ($results as $i => $result) {
-                        $originValue = $this->hydrator->extract($result, $this->fieldOrigin);
-                        if ($originValue && isset($joinResultsAssoc[$originValue])) {
-                            $this->hydrator->hydrate($result, [$this->fieldOrigin => $joinResultsAssoc[$originValue]]);
-                            $results[$i] = $result;
+            foreach ($joinsColumns as $joinsColumn) {
+                /** @var JoinColumn[] $joinColumns */
+                $joinColumns = $joinsColumn->value;
+                foreach ($joinColumns as $joinColumn) {
+                    $colunmName = AnnotationEntityHydrator::camelizeString($joinColumn->referencedColumnName);
+                    foreach ($results as $key => $result) {
+                        if (property_exists(get_class($result), $colunmName)) {
+                            $value = $this->hydrator->extract($result, $colunmName);
+                            $relObject = $entityManager->getRepository($mto->targetEntity)
+                                ->findOneBy([$colunmName => $value]);
+                            $this->hydrator->hydrate($results[$key], [$colunmName => $relObject]);
                         }
                     }
                 }
             }
         }
-    }
 
-    private function convertJoinToQueryBuilder(
-        Join $join, ElasticEntityManager $entityManager, array $results, $parentAlias
-    ) {
-        $assocDeclaration = $join->joinAssociationDeclaration;
-
-
-        if ($assocDeclaration instanceof RangeVariableDeclaration) {
-            $conditionalExpression = $join->conditionalExpression;
-
-            if ($conditionalExpression instanceof ConditionalPrimary) {
-                $scp = $conditionalExpression->simpleConditionalExpression;
-
-                $joinQueryBuilder = new ElasticQueryBuilder($entityManager);
-                $joinedClass = $assocDeclaration->abstractSchemaName;
-                $alias = $assocDeclaration->aliasIdentificationVariable;
-                $joinQueryBuilder->select($alias);
-                $joinQueryBuilder->from($joinedClass, $alias);
-                $joinQueryBuilder->setMaxResults(1);
-                $this->fieldRel = $this->fieldOrigin = null;
-
-                if ($scp instanceof ComparisonExpression) {
-                    if ($scp->leftExpression instanceof ArithmeticExpression) {
-                        $saeLeft = $scp->leftExpression->simpleArithmeticExpression;
-                        $saeRight = $scp->rightExpression->simpleArithmeticExpression;
-
-                        if ($saeLeft instanceof PathExpression && $saeLeft->identificationVariable == $alias) {
-                            $this->fieldRel = $saeLeft->field;
-                        }
-
-                        if ($saeRight instanceof PathExpression && $saeRight->identificationVariable == $alias) {
-                            $this->fieldRel = $saeRight->field;
-                        }
-
-                        if ($saeLeft instanceof PathExpression && $saeLeft->identificationVariable == $parentAlias) {
-                            $this->fieldOrigin = $saeLeft->field;
-                        }
-
-                        if ($saeRight instanceof PathExpression && $saeRight->identificationVariable == $parentAlias) {
-                            $this->fieldOrigin = $saeRight->field;
-                        }
-                    }
-                }
-
-                if (is_string($this->fieldRel) && is_string($this->fieldOrigin)) {
-                    $exp = $joinQueryBuilder->expr();
-                    $hasCondition = false;
-                    foreach ($results as $result) {
-                        $fieldValue = $this->hydrator->extract($result, $this->fieldOrigin);
-                        if (boolval($fieldValue)) {
-                            $hasCondition = true;
-                            $joinQueryBuilder->orWhere($exp->eq("$alias.$this->fieldRel", $exp->literal($fieldValue)));
-                        }
-                    }
-
-                    if ($hasCondition) {
-                        return $joinQueryBuilder;
-                    }
-                }
-            }
-        }
-
-        return null;
+        $eventArgs->setResults($results);
     }
 }

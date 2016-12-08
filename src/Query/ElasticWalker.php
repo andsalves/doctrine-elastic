@@ -34,11 +34,11 @@ class ElasticWalker {
     /** @var SelectStatement */
     private $_ast;
 
-    public function __construct(ElasticQuery $query, SelectStatement $AST) {
+    public function __construct(ElasticQuery $query, SelectStatement $AST, $className) {
         $this->query = $query;
         $this->walkerHelper = new WalkerHelper();
         $this->_ast = $AST;
-        $this->_className = $this->getRootClass();
+        $this->_className = $className;
     }
 
     public function getExecutor() {
@@ -134,21 +134,5 @@ class ElasticWalker {
             ->getClassAnnotation($classMetadata->getReflectionClass(), Type::class);
 
         return $type;
-    }
-
-    /**
-     * @return string
-     */
-    private function getRootClass() {
-        /** @var \Doctrine\ORM\Query\AST\IdentificationVariableDeclaration[] $identificationVariableDeclarations */
-        $identificationVariableDeclarations = $this->_ast->fromClause->identificationVariableDeclarations;
-
-        foreach ($identificationVariableDeclarations as $idVarDeclaration) {
-            if ($idVarDeclaration->rangeVariableDeclaration->isRoot) {
-                return $idVarDeclaration->rangeVariableDeclaration->abstractSchemaName;
-            }
-        }
-
-        return (reset($identificationVariableDeclarations))->rangeVariableDeclaration->abstractSchemaName;
     }
 }

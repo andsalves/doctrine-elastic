@@ -4,42 +4,19 @@ namespace DoctrineElastic\Event;
 
 use Doctrine\Common\EventArgs;
 use Doctrine\ORM\Query\AST\SelectStatement;
+use DoctrineElastic\Decorators\ElasticEntityManager;
 use DoctrineElastic\Elastic\ElasticQuery;
 
 class QueryEventArgs extends EventArgs {
 
-    /** @var SelectStatement */
-    protected $_ast;
-
-    /** @var ElasticQuery */
-    protected $query;
-
     /** @var array */
     protected $results;
 
-    public function __construct(ElasticQuery $query) {
-        $this->query = $query;
-    }
+    /** @var ElasticEntityManager */
+    protected $entityManager;
 
-    /** @return SelectStatement */
-    public function getAST() {
-        return $this->_ast;
-    }
-
-    /** @param SelectStatement $AST */
-    public function setAST($AST) {
-        $this->_ast = $AST;
-    }
-
-    /** @return ElasticQuery */
-    public function getQuery() {
-        return $this->query;
-    }
-
-    /** @param ElasticQuery $query */
-    public function setQuery($query) {
-        $this->query = $query;
-    }
+    /** @var string */
+    protected $targetEntity;
 
     /** @return array */
     public function getResults() {
@@ -49,6 +26,34 @@ class QueryEventArgs extends EventArgs {
     /** @param array $results */
     public function setResults($results) {
         $this->results = $results;
+    }
+
+    /**
+     * @return ElasticEntityManager
+     */
+    public function getEntityManager() {
+        return $this->entityManager;
+    }
+
+    /**
+     * @param ElasticEntityManager $entityManager
+     */
+    public function setEntityManager($entityManager) {
+        $this->entityManager = $entityManager;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTargetEntity() {
+        return $this->targetEntity;
+    }
+
+    /**
+     * @param string $targetEntity
+     */
+    public function setTargetEntity($targetEntity) {
+        $this->targetEntity = $targetEntity;
     }
 
 

@@ -35,12 +35,28 @@ class ElasticParser {
     public function parseElasticQuery() {
         $parserResult = new ElasticParserResult();
 
-        $outputWalker = new ElasticWalker($this->query, $this->getAST());
+        $outputWalker = new ElasticWalker($this->query, $this->getAST(), $this->getRootClass());
         $searchParams = $outputWalker->walkSelectStatement();
 
         $parserResult->setElasticExecutor($outputWalker->getExecutor());
         $parserResult->setSearchParams($searchParams);
 
         return $parserResult;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRootClass() {
+        /** @var \Doctrine\ORM\Query\AST\IdentificationVariableDeclaration[] $identificationVariableDeclarations */
+        $identificationVariableDeclarations = $this->getAST()->fromClause->identificationVariableDeclarations;
+
+        foreach ($identificationVariableDeclarations as $idVarDeclaration) {
+            if ($idVarDeclaration->rangeVariableDeclaration->isRoot) {
+                return $idVarDeclaration->rangeVariableDeclaration->abstractSchemaName;
+            }
+        }
+
+        return (reset($identificationVariableDeclarations))->rangeVariableDeclaration->abstractSchemaName;
     }
 }

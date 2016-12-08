@@ -50,8 +50,9 @@ class ElasticQuery {
             throw QueryException::tooFewParameters($mappingCount, $paramCount);
         }
 
-        $eventArgs = new QueryEventArgs($this);
-        $eventArgs->setAST($parser->getAST());
+        $eventArgs = new QueryEventArgs();
+        $eventArgs->setTargetEntity($parser->getRootClass());
+        $eventArgs->setEntityManager($this->getEntityManager());
         $this->getEntityManager()->getEventManager()->dispatchEvent(DoctrineElasticEvents::beforeQuery, $eventArgs);
 
         $results = $parserResult->getElasticExecutor()->execute($parserResult->getSearchParams());
