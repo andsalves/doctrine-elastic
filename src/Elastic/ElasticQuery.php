@@ -2,15 +2,17 @@
 
 namespace DoctrineElastic\Elastic;
 
-
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\QueryException;
-use DoctrineElastic\Decorators\ElasticEntityManager;
+use DoctrineElastic\ElasticEntityManager;
 use DoctrineElastic\Event\QueryEventArgs;
 use DoctrineElastic\Query\ElasticParser;
-use DoctrineElastic\Query\ElasticParserResult;
 use DoctrineElastic\Service\ElasticSearchService;
 
+/**
+ * DoctrineElastic Query representation
+ *
+ * @author Ands
+ */
 class ElasticQuery {
 
     /** @var ElasticEntityManager */

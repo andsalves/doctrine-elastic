@@ -7,6 +7,11 @@ use DoctrineElastic\Elastic\SearchParams;
 use DoctrineElastic\Hydrate\SimpleEntityHydrator;
 use DoctrineElastic\Service\ElasticSearchService;
 
+/**
+ * Class for query execution task
+ *
+ * @author Ands
+ */
 class ElasticExecutor {
 
     /** @var SimpleEntityHydrator */

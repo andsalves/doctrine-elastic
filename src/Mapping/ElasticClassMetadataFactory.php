@@ -5,6 +5,11 @@ namespace DoctrineElastic\Mapping;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadataFactory;
 
+/**
+ * Metadata factory for this elastic doctrine extension
+ *
+ * @author Ands
+ */
 class ElasticClassMetadataFactory extends ClassMetadataFactoryDecorator {
 
     public function __construct(EntityManagerInterface $entityManager) {

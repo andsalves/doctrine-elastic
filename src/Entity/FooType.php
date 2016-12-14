@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use DoctrineElastic\Mapping as ElasticORM;
 
 /**
- * Elastic type representation, as a relational table managed by Doctrine
+ * Elastic type representation, like a relational table managed by Doctrine
  * @author Ands
  *
  *

@@ -4,6 +4,11 @@ namespace DoctrineElastic\Event;
 
 use Doctrine\Common\EventArgs;
 
+/**
+ * EventArgs relative to Entity operations in DoctrineElastic events
+ *
+ * @author Ands
+ */
 class EntityEventArgs extends EventArgs {
 
     /** @var object */

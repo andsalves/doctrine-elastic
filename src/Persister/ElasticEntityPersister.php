@@ -1,13 +1,12 @@
 <?php
 
-namespace DoctrineElastic\Decorators;
-
+namespace DoctrineElastic\Persister;
 
 use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\MappingException;
+use DoctrineElastic\ElasticEntityManager;
 use DoctrineElastic\Elastic\DoctrineElasticEvents;
 use DoctrineElastic\Elastic\SearchParams;
 use DoctrineElastic\Event\EntityEventArgs;
@@ -21,7 +20,13 @@ use DoctrineElastic\Mapping\Type;
 use DoctrineElastic\Service\ElasticSearchService;
 use Elasticsearch\Client;
 
-class ElasticedEntityPersister extends AbstractEntityPersister {
+/**
+ * Entity Persister for this doctrine elastic extension
+ * This class implements some crud operations
+ *
+ * @author Ands
+ */
+class ElasticEntityPersister extends AbstractEntityPersister {
 
     /** @var AnnotationReader */
     private $annotationReader;
@@ -158,7 +163,6 @@ class ElasticedEntityPersister extends AbstractEntityPersister {
                 throw new ElasticOperationException(sprintf('Unable to complete update operation, '
                     . 'with the following elastic return: <br><pre>%s</pre>', var_export($return)));
             }
-
         }
     }
 

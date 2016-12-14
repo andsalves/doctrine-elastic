@@ -5,6 +5,14 @@ namespace DoctrineElastic\Mapping;
 use Doctrine\ORM\Mapping\Annotation;
 
 /**
+ * Represents a type for entity, with name and index
+ *
+ * Advice: Values of type name and index can be dynamic by not define one of them, or both,
+ * as long as you call Type::setDefaultName and/or Type::setDefaultIndex
+ * before your query
+ *
+ * @author Ands
+ *
  * @Annotation
  * @Target("CLASS")
  */

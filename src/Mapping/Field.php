@@ -5,6 +5,12 @@ namespace DoctrineElastic\Mapping;
 use Doctrine\ORM\Mapping\Annotation;
 
 /**
+ * Represents a field in elasticsearch.
+ * These attributes represents elastic mapping for field, except $name
+ * Creation of type mappings will be based in this annotation for each field/column
+ *
+ * @author Ands
+ *
  * @Annotation
  * @Target({"PROPERTY","ANNOTATION"})
  */

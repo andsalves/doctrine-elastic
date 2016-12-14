@@ -2,7 +2,12 @@
 
 namespace DoctrineElastic\Query\Walker;
 
-
+/**
+ * Auxiliary for main operations
+ * Contains map for operatoins
+ *
+ * @author Ands
+ */
 class OperatorsMap {
 
     const LIKE = 'like';

@@ -2,6 +2,11 @@
 
 namespace DoctrineElastic\Elastic;
 
+/**
+ * Search params, used to make interface between elastic api queries and this extension queries
+ *
+ * @author Ands
+ */
 class SearchParser {
 
     /**

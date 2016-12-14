@@ -7,7 +7,12 @@ use Doctrine\Common\Persistence\Mapping\ClassMetadata;
 use Doctrine\Common\Persistence\Mapping\ReflectionService;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 
-class ClassMetadataFactoryDecorator extends AbstractClassMetadataFactory {
+/**
+ * Metadata Factory Decorator ElasticClassMetadataFactory
+ *
+ * @author Ands
+ */
+abstract class ClassMetadataFactoryDecorator extends AbstractClassMetadataFactory {
 
     /** @var AbstractClassMetadataFactory */
     protected $wrapped;

@@ -5,20 +5,14 @@ namespace DoctrineElastic\Listener;
 use Doctrine\ORM\Mapping\JoinColumn;
 use Doctrine\ORM\Mapping\JoinColumns;
 use Doctrine\ORM\Mapping\ManyToOne;
-use Doctrine\ORM\Query\AST\ArithmeticExpression;
-use Doctrine\ORM\Query\AST\ComparisonExpression;
-use Doctrine\ORM\Query\AST\ConditionalPrimary;
-use Doctrine\ORM\Query\AST\IdentificationVariableDeclaration;
-use Doctrine\ORM\Query\AST\Join;
-use Doctrine\ORM\Query\AST\PathExpression;
-use Doctrine\ORM\Query\AST\RangeVariableDeclaration;
-use Doctrine\ORM\Query\AST\SelectStatement;
-use DoctrineElastic\Decorators\ElasticEntityManager;
-use DoctrineElastic\Elastic\ElasticQuery;
-use DoctrineElastic\Elastic\ElasticQueryBuilder;
 use DoctrineElastic\Event\QueryEventArgs;
 use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
 
+/**
+ * Query events main handler for this extension
+ *
+ * @author Ands
+ */
 class QueryListener {
 
     /** @var AnnotationEntityHydrator */

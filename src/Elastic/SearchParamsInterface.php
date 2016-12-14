@@ -2,7 +2,11 @@
 
 namespace DoctrineElastic\Elastic;
 
-
+/**
+ * Interface for SearchParams class
+ *
+ * @author Ands
+ */
 interface SearchParamsInterface {
 
     public function getIndex();

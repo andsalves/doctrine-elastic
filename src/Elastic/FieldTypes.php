@@ -2,6 +2,11 @@
 
 namespace DoctrineElastic\Elastic;
 
+/**
+ * This class represents types and maps for types common to elastic
+ *
+ * @author Ands
+ */
 class FieldTypes {
 
     const STRING = 'string';

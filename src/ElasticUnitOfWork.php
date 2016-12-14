@@ -1,6 +1,6 @@
 <?php
 
-namespace DoctrineElastic\Decorators;
+namespace DoctrineElastic;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnClearEventArgs;
@@ -9,12 +9,13 @@ use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\ORMInvalidArgumentException;
 use DoctrineElastic\Hydrate\SimpleEntityHydrator;
+use DoctrineElastic\Persister\ElasticEntityPersister;
 use Elasticsearch\Client;
 use InvalidArgumentException;
 
 /**
  * Here is a Elastic adaptation for UoW of Doctrine.
- * There is many simplifications, just like entity states, persist, remove, delete, and commit actions,
+ * There is many simplifications, just like entity states, persist, remove, delete, commit actions,
  * and much more.
  *
  * @author Ands
@@ -65,12 +66,12 @@ class ElasticUnitOfWork {
 
     /**
      * @param string $entityName
-     * @return ElasticedEntityPersister
+     * @return ElasticEntityPersister
      */
     public function getEntityPersister($entityName) {
         $class = $this->em->getClassMetadata($entityName);
 
-        return new ElasticedEntityPersister($this->em, $class, $this->elastic);
+        return new ElasticEntityPersister($this->em, $class, $this->elastic);
     }
 
     /**

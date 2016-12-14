@@ -10,6 +10,8 @@ use DoctrineElastic\Exception\ElasticConstraintException;
 use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
 
 /**
+ * Insert events main handler for this extension
+ *
  * @author Ands
  */
 class InsertListener {

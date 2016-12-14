@@ -2,7 +2,11 @@
 
 namespace DoctrineElastic\Elastic;
 
-
+/**
+ * Entity class for representation of Elasticsearch api search query
+ *
+ * @author
+ */
 class SearchParams {
 
     /* extrapolating elastic max results, ignoring elastic default as 10 */

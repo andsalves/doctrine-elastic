@@ -23,6 +23,11 @@ use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
 use DoctrineElastic\Mapping\Field;
 use DoctrineElastic\Query\Walker\Helper\WalkerHelper;
 
+/**
+ * Walker specialist for Where Clause of Query(builder)
+ *
+ * @author Ands
+ */
 class WhereWalker {
 
     /** @var ElasticQuery */

@@ -3,10 +3,13 @@
 namespace DoctrineElastic\Event;
 
 use Doctrine\Common\EventArgs;
-use Doctrine\ORM\Query\AST\SelectStatement;
-use DoctrineElastic\Decorators\ElasticEntityManager;
-use DoctrineElastic\Elastic\ElasticQuery;
+use DoctrineElastic\ElasticEntityManager;
 
+/**
+ * EventArgs relative to Query operations in DoctrineElastic events
+ *
+ * @author Ands
+ */
 class QueryEventArgs extends EventArgs {
 
     /** @var array */

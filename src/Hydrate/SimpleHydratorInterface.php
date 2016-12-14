@@ -2,6 +2,11 @@
 
 namespace DoctrineElastic\Hydrate;
 
+/**
+ * Interface for Hydrators
+ *
+ * @author Ands
+ */
 interface SimpleHydratorInterface {
 
     /**

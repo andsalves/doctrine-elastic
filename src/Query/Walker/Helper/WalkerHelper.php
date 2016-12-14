@@ -7,6 +7,11 @@ use DoctrineElastic\Exception\InvalidOperatorException;
 use DoctrineElastic\Mapping\Field;
 use DoctrineElastic\Query\Walker\OperatorsMap;
 
+/**
+ * Helper for this extension query walkers
+ *
+ * @author Ands
+ */
 class WalkerHelper {
 
     /**

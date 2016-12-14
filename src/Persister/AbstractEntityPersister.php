@@ -1,15 +1,20 @@
 <?php
 
-namespace DoctrineElastic\Decorators;
+namespace DoctrineElastic\Persister;
 
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\PersistentCollection;
-use Doctrine\ORM\Persisters\Entity\BasicEntityPersister;
 use Doctrine\ORM\Persisters\Entity\EntityPersister;
+use DoctrineElastic\ElasticEntityManager;
 use Elasticsearch\Client;
 
+/**
+ * Base implementation for ElasticEntityPersister
+ *
+ * @author Ands
+ */
 abstract class AbstractEntityPersister implements EntityPersister {
 
     /** @var EntityPersister */

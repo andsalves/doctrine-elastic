@@ -1,6 +1,6 @@
 <?php
 
-namespace DoctrineElastic\Decorators;
+namespace DoctrineElastic;
 
 use Doctrine\Common\EventManager;
 use Doctrine\ORM\Configuration;
@@ -21,6 +21,8 @@ use DoctrineElastic\Service\ElasticSearchService;
 use Elasticsearch\Client;
 
 /**
+ * ElasticEntityManager - leading class for all
+ *
  * @author Ands
  */
 class ElasticEntityManager implements EntityManagerInterface {

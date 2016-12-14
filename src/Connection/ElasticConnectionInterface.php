@@ -4,6 +4,11 @@ namespace DoctrineElastic\Connection;
 
 use Elasticsearch\Client;
 
+/**
+ * Interface for elastic connection implementation
+ *
+ * @author Ands
+ */
 interface ElasticConnectionInterface {
 
     /**

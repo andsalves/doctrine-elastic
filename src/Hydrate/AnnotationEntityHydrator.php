@@ -8,6 +8,12 @@ use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use DoctrineElastic\Mapping\Field;
 use DoctrineElastic\Mapping\MetaField;
 
+/**
+ * Hydrator expert at extracting annotation fields from Entities
+ * Uses AnnotationReader from Doctrine
+ *
+ * @author Ands
+ */
 class AnnotationEntityHydrator extends SimpleEntityHydrator {
 
     /** @var AnnotationReader */

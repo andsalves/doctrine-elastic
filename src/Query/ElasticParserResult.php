@@ -4,6 +4,9 @@ namespace DoctrineElastic\Query;
 
 use DoctrineElastic\Elastic\SearchParams;
 
+/**
+ * Represents a parser result
+ */
 class ElasticParserResult {
 
     /** @var ElasticExecutor */

@@ -2,14 +2,15 @@
 
 namespace DoctrineElastic\Hydrate;
 
-use Doctrine\Common\Annotations\Annotation;
-use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Persistence\Mapping\RuntimeReflectionService;
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\Mapping\Reflection\ReflectionPropertiesGetter;
-use DoctrineElastic\Mapping\Field;
-use DoctrineElastic\Mapping\MetaField;
 
+/**
+ * Common Entity Hydrator
+ * Uses ReflectionPropertiesGetter from Doctrine
+ *
+ * @author Ands
+ */
 class SimpleEntityHydrator implements SimpleHydratorInterface {
 
     /**

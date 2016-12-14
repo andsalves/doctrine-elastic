@@ -6,6 +6,12 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Parser;
 use DoctrineElastic\Elastic\ElasticQuery;
 
+/**
+ * Elastic Query parser
+ * Prepares query for execution
+ *
+ * @author Ands
+ */
 class ElasticParser {
 
     /** @var ElasticQuery */

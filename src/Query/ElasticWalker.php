@@ -17,6 +17,11 @@ use DoctrineElastic\Query\Walker\Helper\WalkerHelper;
 use DoctrineElastic\Query\Walker\WhereWalker;
 use DoctrineElastic\Service\ElasticSearchService;
 
+/**
+ * Main walker for queries
+ *
+ * @uahtor Ands
+ */
 class ElasticWalker {
 
     /** @var ElasticQuery */

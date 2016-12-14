@@ -5,6 +5,11 @@ namespace DoctrineElastic\Elastic;
 use Doctrine\ORM\QueryBuilder;
 use DoctrineElastic\Exception\ElasticOperationException;
 
+/**
+ * DoctrineElastic QueryBuilder representation
+ *
+ * @author Ands
+ */
 class ElasticQueryBuilder extends QueryBuilder {
 
     /**

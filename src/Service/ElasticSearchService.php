@@ -7,6 +7,9 @@ use DoctrineElastic\Elastic\SearchParams;
 use DoctrineElastic\Elastic\SearchParser;
 use Elasticsearch\Client;
 
+/**
+ * Auxiliary service for elasticsearch basic operations
+ */
 class ElasticSearchService {
 
     /** @var Client */
