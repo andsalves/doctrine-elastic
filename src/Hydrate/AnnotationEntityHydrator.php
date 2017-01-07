@@ -25,6 +25,8 @@ class AnnotationEntityHydrator extends SimpleEntityHydrator {
     }
 
     /**
+     * Extract fields with specified annotation
+     *
      * @param $entity
      * @param null $specAnnotationClass
      * @return array
@@ -51,12 +53,14 @@ class AnnotationEntityHydrator extends SimpleEntityHydrator {
     }
 
     /**
-     * @param $entity
+     * Extract annotations from entity fields
+     *
+     * @param $entityClass
      * @param string $specAnnotationClass
-     * @return array
+     * @return array|\Doctrine\ORM\Mapping\Annotation[] {$specAnnotationClass}[]
      */
-    public function extractSpecAnnotations($entity, $specAnnotationClass) {
-        $properties = $this->reflectionPropertiesGetter->getProperties(get_class($entity));
+    public function extractSpecAnnotations($entityClass, $specAnnotationClass) {
+        $properties = $this->reflectionPropertiesGetter->getProperties($entityClass);
         $annotations = [];
 
         foreach ($properties as $prop) {

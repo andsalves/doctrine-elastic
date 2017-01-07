@@ -38,14 +38,13 @@ class QueryListener {
 
     private function executeRelationshipQueries(QueryEventArgs $eventArgs) {
         $targetClass = $eventArgs->getTargetEntity();
-        $entity = new $targetClass();
         $entityManager = $eventArgs->getEntityManager();
         $results = $eventArgs->getResults();
 
         /** @var ManyToOne[] $manyToOnes */
-        $manyToOnes = $this->hydrator->extractSpecAnnotations($entity, ManyToOne::class);
+        $manyToOnes = $this->hydrator->extractSpecAnnotations($targetClass, ManyToOne::class);
         /** @var JoinColumns[] $joinsColumns */
-        $joinsColumns = $this->hydrator->extractSpecAnnotations($entity, JoinColumns::class);
+        $joinsColumns = $this->hydrator->extractSpecAnnotations($targetClass, JoinColumns::class);
 
         foreach ($manyToOnes as $propName => $mto) {
             if (!isset($joinsColumns[$propName])) {

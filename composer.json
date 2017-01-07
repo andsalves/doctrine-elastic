@@ -20,7 +20,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "DoctrineElastic\\Tests\\": "tests/"
+            "DoctrineElastic\\Tests\\": "tests/DoctrineElastic/Tests"
         }
     },
     "archive": {

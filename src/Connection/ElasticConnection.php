@@ -106,7 +106,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             'type' => $type,
             'op_type' => 'create',
             'timestamp' => time(),
-            'refresh' => true,
+            'refresh' => "true",
             'body' => $body
         );
 
@@ -130,7 +130,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             'id' => $_id,
             'index' => $index,
             'type' => $type,
-            'refresh' => true,
+            'refresh' => "true",
             'body' => array(
                 'doc' => $body
             )
@@ -156,7 +156,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             'id' => $_id,
             'index' => $index,
             'type' => $type,
-            'refresh' => true
+            'refresh' => "true"
         );
 
         $params = array_merge_recursive($defaultParams, $mergeParams);
@@ -187,7 +187,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             'id' => $_id,
             'index' => $index,
             'type' => $type,
-            'refresh' => true,
+            'refresh' => "true",
             '_source' => true,
             '_source_exclude' => []
         );

@@ -104,10 +104,8 @@ class ElasticEntityManager implements EntityManagerInterface {
     }
 
     public function getReference($entityName, $id) {
-        $class = $this->getMetadataFactory()->getMetadataFor(ltrim($entityName, '\\'));
-
         if (!is_array($id)) {
-            $criteria = array($class->getIdentifier()[0] => $id);
+            $criteria = ['_id' => $id];
         } else {
             $criteria = $id;
         }

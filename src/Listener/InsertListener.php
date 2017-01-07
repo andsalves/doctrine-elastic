@@ -36,9 +36,9 @@ class InsertListener {
 
     private function changeEntityForManyToOneRelationships($entity) {
         /** @var ManyToOne[] $relationships */
-        $relationships = $this->getHydrator()->extractSpecAnnotations($entity, ManyToOne::class);
+        $relationships = $this->getHydrator()->extractSpecAnnotations(get_class($entity), ManyToOne::class);
         /** @var JoinColumns[] $joinColumns */
-        $joinColumns = $this->getHydrator()->extractSpecAnnotations($entity, JoinColumns::class);
+        $joinColumns = $this->getHydrator()->extractSpecAnnotations(get_class($entity), JoinColumns::class);
 
         if (empty($relationships)) {
             return null;

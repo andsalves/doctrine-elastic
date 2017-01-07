@@ -50,7 +50,7 @@ class WhereWalker {
         $this->walkerHelper = $walkerHelper;
         $this->hydrator = new AnnotationEntityHydrator();
 
-        $this->fieldAnnotations = $this->hydrator->extractSpecAnnotations(new $className(), Field::class);
+        $this->fieldAnnotations = $this->hydrator->extractSpecAnnotations($className, Field::class);
     }
 
     private function fetchTermsAndFactors(Node $node) {

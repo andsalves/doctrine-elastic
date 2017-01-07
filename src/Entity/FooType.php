@@ -10,7 +10,7 @@ use DoctrineElastic\Mapping as ElasticORM;
  * @author Ands
  *
  *
- * @ElasticORM\Type(name="crm", index="contas")
+ * @ElasticORM\Type(name="foo_type", index="foo_index")
  * @ORM\Table(name="foo_table")
  * @ORM\Entity
  */
@@ -25,17 +25,18 @@ class FooType {
     /**
      * @var int
      *
-     * @ORM\Column(name="id_conta", type="integer", nullable=false)
+     * @ORM\Column(name="custom_identifier", type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @ElasticORM\Field(name="custom_identifier", type="integer")
      */
     private $customIdentifier;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="nome_conta", type="string", length=100, nullable=false)
-     * @ElasticORM\Field(name="nome", type="text")
+     * @ORM\Column(name="custom_field", type="string")
+     * @ElasticORM\Field(name="custom_field", type="string")
      */
     private $customField;
 
@@ -70,6 +71,5 @@ class FooType {
         $this->customField = $customField;
         return $this;
     }
-
 }
 
