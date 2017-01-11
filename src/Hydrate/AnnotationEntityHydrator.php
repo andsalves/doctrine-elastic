@@ -37,15 +37,15 @@ class AnnotationEntityHydrator extends SimpleEntityHydrator {
         $data = [];
 
         foreach ($properties as $prop) {
-            /** @var Annotation $specAnnotation */
+            /** @var Annotation|Field $specAnnotation */
             $specAnnotation = $this->annotationReader->getPropertyAnnotation(
                 $prop, $specAnnotationClass
             );
 
             $name = self::decamelizeString($prop->name);
 
-            if (!is_null($specAnnotation) && in_array($name, array_keys($values))) {
-                $data[$name] = $values[$name];
+            if (!is_null($specAnnotation) && isset($specAnnotation->name) && in_array($name, array_keys($values))) {
+                $data[$specAnnotation->name] = $values[$name];
             }
         }
 
