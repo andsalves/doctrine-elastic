@@ -63,6 +63,6 @@ class ElasticParser {
             }
         }
 
-        return (reset($identificationVariableDeclarations))->rangeVariableDeclaration->abstractSchemaName;
+        return reset($identificationVariableDeclarations)->rangeVariableDeclaration->abstractSchemaName;
     }
 }
