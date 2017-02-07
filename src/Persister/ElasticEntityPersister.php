@@ -217,8 +217,11 @@ class ElasticEntityPersister extends AbstractEntityPersister {
             foreach ($ESFields as $ESField) {
                 if ($ESField instanceof Field) {
                     $propertiesMapping[$ESField->name] = ['type' => $ESField->type];
-
+                    
                     foreach ($ESField->getArrayCopy() as $prop => $propValue) {
+                        if ($ESField->type == 'nested' && ($prop == 'boost' || $prop == 'index')) {
+                            continue;
+                        }
                         if (!is_null($propValue) && $prop != 'name') {
                             $propertiesMapping[$ESField->name][$prop] = $propValue;
                         }
