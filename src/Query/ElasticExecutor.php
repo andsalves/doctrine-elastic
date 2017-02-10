@@ -2,9 +2,11 @@
 
 namespace DoctrineElastic\Query;
 
-use Doctrine\ORM\Query\AST\SelectStatement;
 use DoctrineElastic\Elastic\SearchParams;
+use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
 use DoctrineElastic\Hydrate\SimpleEntityHydrator;
+use DoctrineElastic\Mapping\Field;
+use DoctrineElastic\Mapping\MetaField;
 use DoctrineElastic\Service\ElasticSearchService;
 
 /**
@@ -14,7 +16,7 @@ use DoctrineElastic\Service\ElasticSearchService;
  */
 class ElasticExecutor {
 
-    /** @var SimpleEntityHydrator */
+    /** @var AnnotationEntityHydrator */
     private $_hydrator;
 
     /** @var ElasticSearchService */
@@ -25,7 +27,7 @@ class ElasticExecutor {
 
     public function __construct(ElasticSearchService $searchService, $className) {
         $this->_searchService = $searchService;
-        $this->_hydrator = new SimpleEntityHydrator();
+        $this->_hydrator = new AnnotationEntityHydrator();
         $this->_className = $className;
     }
 
@@ -41,6 +43,8 @@ class ElasticExecutor {
         foreach ($resultSets as $resultSet) {
             $entity = new $className();
             $this->_hydrator->hydrate($entity, $resultSet);
+            $this->_hydrator->hydrateByAnnotation($entity, Field::class, $resultSet);
+            $this->_hydrator->hydrateByAnnotation($entity, MetaField::class, $resultSet);
             $results[] = $entity;
         }
 
