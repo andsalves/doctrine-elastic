@@ -4,9 +4,7 @@ namespace DoctrineElastic\Hydrate;
 
 use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use DoctrineElastic\Mapping\Field;
-use DoctrineElastic\Mapping\MetaField;
 
 /**
  * Hydrator expert at extracting annotation fields from Entities
@@ -50,6 +48,30 @@ class AnnotationEntityHydrator extends SimpleEntityHydrator {
         }
 
         return $data;
+    }
+
+    /**
+     * @param object $entity
+     * @param string $annotationClass
+     * @param array $data
+     * @return object
+     */
+    public function hydrateByAnnotation($entity, $annotationClass, array $data) {
+        /** @var Annotation $annotations */
+        $annotations = $this->extractSpecAnnotations(get_class($entity), $annotationClass);
+        $dataAnnotations = [];
+
+        foreach ($annotations as $propName => $annotation) {
+            if (!property_exists($annotation, 'name')) {
+                continue;
+            }
+
+            if (isset($data[$annotation->name])) {
+                $dataAnnotations[$propName] = $data[$annotation->name];
+            }
+        }
+
+        return $this->hydrate($entity, $dataAnnotations);
     }
 
     /**
