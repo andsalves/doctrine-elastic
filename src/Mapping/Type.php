@@ -62,7 +62,7 @@ class Type implements Annotation {
 
     /** @param string $defaultIndex */
     public static function setDefaultIndex($defaultIndex) {
-        self::$defaultIndex = $defaultIndex;
+        self::$defaultIndex = strtolower($defaultIndex);
     }
 
     /** @return null|string */
