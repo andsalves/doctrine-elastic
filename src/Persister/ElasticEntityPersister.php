@@ -84,7 +84,7 @@ class ElasticEntityPersister extends AbstractEntityPersister {
             $metaFieldsData = $this->hydrator->extractWithAnnotation($entityCopy, MetaField::class);
             $mergeParams = [];
 
-            if (array_key_exists($metaFieldsData['_id']) && !empty($metaFieldsData['_id'])) {
+            if (array_key_exists('_id', $metaFieldsData) && !empty($metaFieldsData['_id'])) {
                 $mergeParams['id'] = $metaFieldsData['_id'];
             }
 
