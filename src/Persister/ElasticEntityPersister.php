@@ -7,6 +7,7 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\MappingException;
+use DoctrineElastic\Elastic\SearchParser;
 use DoctrineElastic\ElasticEntityManager;
 use DoctrineElastic\Elastic\DoctrineElasticEvents;
 use DoctrineElastic\Elastic\SearchParams;
@@ -120,7 +121,7 @@ class ElasticEntityPersister extends AbstractEntityPersister {
                 }
             }
         }
-        
+
         $body['query']['bool']['must'] = $must;
 
         $searchParams = new SearchParams();
@@ -131,13 +132,32 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         $searchParams->setSort($sort);
         $searchParams->setFrom($offset);
 
-        $arrayResults = $this->elasticSearchService->searchAsIterator($searchParams)->getArrayCopy();
+        $arrayResults = $this->fetchElasticResult($searchParams);
         $results = [];
         $entityClass = $classMetadata->name;
 
         foreach ($arrayResults as $arrayResult) {
             $entity = new $entityClass();
-            $results[] = $this->hydrator->hydrate($entity, $arrayResult);
+            $this->hydrator->hydrate($entity, $arrayResult);
+
+            if (isset($arrayResult['_source'])) {
+                $this->hydrator->hydrate($entity, $arrayResult['_source']);
+            }
+
+            $results[] = $entity;
+        }
+
+        return $results;
+    }
+
+    private function fetchElasticResult(SearchParams $searchParams) {
+        $results = [];
+
+        if ($this->elastic->indices()->exists(['index' => $searchParams->getIndex()])) {
+            $arrayParams = SearchParser::parseSearchParams($searchParams);
+            $results = $this->em->getConnection()->search(
+                $arrayParams['index'], $arrayParams['type'], $arrayParams['body'], $arrayParams
+            );
         }
 
         return $results;
@@ -162,6 +182,10 @@ class ElasticEntityPersister extends AbstractEntityPersister {
 
             if (isset($metaFieldsData['_id'])) {
                 $mergeParams['id'] = $metaFieldsData['_id'];
+            }
+
+            if (isset($metaFieldsData['_parent'])) {
+                $mergeParams['parent'] = $metaFieldsData['_parent'];
             }
 
             $this->createTypeIfNotExists();
@@ -228,7 +252,8 @@ class ElasticEntityPersister extends AbstractEntityPersister {
 
             $mappings = array(
                 $typeName => array(
-                    'properties' => $propertiesMapping
+                    'properties' => $propertiesMapping,
+                    '_parent' => ['type' => $type->getParent()]
                 )
             );
 
