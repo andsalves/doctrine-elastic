@@ -4,9 +4,7 @@ namespace DoctrineElastic\Hydrate;
 
 use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use DoctrineElastic\Mapping\Field;
-use DoctrineElastic\Mapping\MetaField;
 
 /**
  * Hydrator expert at extracting annotation fields from Entities
@@ -37,19 +35,43 @@ class AnnotationEntityHydrator extends SimpleEntityHydrator {
         $data = [];
 
         foreach ($properties as $prop) {
-            /** @var Annotation $specAnnotation */
+            /** @var Annotation|Field $specAnnotation */
             $specAnnotation = $this->annotationReader->getPropertyAnnotation(
                 $prop, $specAnnotationClass
             );
 
             $name = self::decamelizeString($prop->name);
 
-            if (!is_null($specAnnotation) && in_array($name, array_keys($values))) {
-                $data[$name] = $values[$name];
+            if (!is_null($specAnnotation) && isset($specAnnotation->name) && in_array($name, array_keys($values))) {
+                $data[$specAnnotation->name] = $values[$name];
             }
         }
 
         return $data;
+    }
+
+    /**
+     * @param object $entity
+     * @param string $annotationClass
+     * @param array $data
+     * @return object
+     */
+    public function hydrateByAnnotation($entity, $annotationClass, array $data) {
+        /** @var Annotation $annotations */
+        $annotations = $this->extractSpecAnnotations(get_class($entity), $annotationClass);
+        $dataAnnotations = [];
+
+        foreach ($annotations as $propName => $annotation) {
+            if (!property_exists($annotation, 'name')) {
+                continue;
+            }
+
+            if (isset($data[$annotation->name])) {
+                $dataAnnotations[$propName] = $data[$annotation->name];
+            }
+        }
+
+        return $this->hydrate($entity, $dataAnnotations);
     }
 
     /**

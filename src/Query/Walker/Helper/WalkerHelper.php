@@ -71,7 +71,10 @@ class WalkerHelper {
                         $boolField = 'must' . ($operator == OperatorsMap::EQ ? '' : '_not');
                         $itemSearch = array(
                             'match' => array(
-                                $field => $value
+                                $field => array(
+                                    'query' => $value,
+                                    'operator' => 'AND'
+                                )
                             )
                         );
                         $bodyTemp['query']['bool'][$boolField][] = $itemSearch;

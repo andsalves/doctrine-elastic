@@ -5,7 +5,6 @@ namespace DoctrineElastic\Persister;
 use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\MappingException;
 use DoctrineElastic\Elastic\SearchParser;
 use DoctrineElastic\ElasticEntityManager;
@@ -16,7 +15,6 @@ use DoctrineElastic\Exception\ElasticConstraintException;
 use DoctrineElastic\Exception\ElasticOperationException;
 use DoctrineElastic\Exception\InvalidParamsException;
 use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
-use DoctrineElastic\Hydrate\SimpleEntityHydrator;
 use DoctrineElastic\Mapping\Field;
 use DoctrineElastic\Mapping\MetaField;
 use DoctrineElastic\Mapping\Type;
@@ -31,14 +29,14 @@ use Elasticsearch\Client;
  */
 class ElasticEntityPersister extends AbstractEntityPersister {
 
+    /** @var array */
+    protected $queuedInserts = [];
+
     /** @var AnnotationReader */
     private $annotationReader;
 
     /** @var ElasticSearchService */
     private $elasticSearchService;
-
-    /** @var array */
-    protected $queuedInserts = [];
 
     /** @var AnnotationEntityHydrator */
     private $hydrator;
@@ -71,12 +69,6 @@ class ElasticEntityPersister extends AbstractEntityPersister {
             $errorMessage = '_id metaField is missing in %s entity class';
             throw new AnnotationException(sprintf($errorMessage, $className));
         }
-    }
-
-    public function load(array $criteria, $entity = null, $assoc = null, array $hints = array(), $lockMode = null, $limit = null, array $orderBy = null) {
-        $results = $this->loadAll($criteria, $orderBy, $limit);
-
-        return count($results) ? $results[0] : null;
     }
 
     public function loadAll(array $criteria = [], array $orderBy = null, $limit = null, $offset = null) {
@@ -180,7 +172,7 @@ class ElasticEntityPersister extends AbstractEntityPersister {
             $metaFieldsData = $this->hydrator->extractWithAnnotation($entityCopy, MetaField::class);
             $mergeParams = [];
 
-            if (isset($metaFieldsData['_id'])) {
+            if (array_key_exists('_id', $metaFieldsData) && !empty($metaFieldsData['_id'])) {
                 $mergeParams['id'] = $metaFieldsData['_id'];
             }
 
@@ -209,24 +201,6 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         }
     }
 
-    public function update($entity) {
-        $type = $this->getEntityType();
-        $dataUpdate = $this->hydrator->extractWithAnnotation($entity, Field::class);
-        $_id = $this->hydrator->extract($entity, '_id');
-        $return = [];
-
-        $updated = $this->em->getConnection()->update(
-            $type->getIndex(), $type->getName(), $_id, $dataUpdate, [], $return
-        );
-
-        if ($updated) {
-            $this->hydrateEntityByResult($entity, $return);
-        } else {
-            throw new ElasticOperationException(sprintf('Unable to complete update operation, '
-                . 'with the following elastic return: <br><pre>%s</pre>', var_export($return)));
-        }
-    }
-
     private function createTypeIfNotExists() {
         $type = $this->getEntityType();
         $indexName = $type->getIndex();
@@ -243,6 +217,9 @@ class ElasticEntityPersister extends AbstractEntityPersister {
                     $propertiesMapping[$ESField->name] = ['type' => $ESField->type];
 
                     foreach ($ESField->getArrayCopy() as $prop => $propValue) {
+                        if ($ESField->type == 'nested' && ($prop == 'boost' || $prop == 'index')) {
+                            continue;
+                        }
                         if (!is_null($propValue) && $prop != 'name') {
                             $propertiesMapping[$ESField->name][$prop] = $propValue;
                         }
@@ -265,9 +242,33 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         }
     }
 
-    public function addInsert($entity) {
-        $oid = spl_object_hash($entity);
-        $this->queuedInserts[$oid] = $entity;
+    /**
+     * Check Identity values for entity, if there are identity fields,
+     * check if already exists items with such value (unique constraint verification)
+     *
+     * @param object $entity
+     * @throws ElasticConstraintException
+     */
+    private function checkIndentityConstraints($entity) {
+        $identities = $this->getClassMetadata()->getIdentifierValues($entity);
+
+        foreach ($identities as $property => $value) {
+            $element = $this->load([$property => $value]);
+
+            if (boolval($element)) {
+                throw new ElasticConstraintException(sprintf("Unique/IDENTITY field %s already has "
+                    . "a document with value '%s'", $property, $value));
+            }
+        }
+    }
+
+    public function load(
+        array $criteria, $entity = null, $assoc = null, array $hints = [],
+        $lockMode = null, $limit = null, array $orderBy = null
+    ) {
+        $results = $this->loadAll($criteria, $orderBy, $limit);
+
+        return count($results) ? $results[0] : null;
     }
 
     /**
@@ -284,6 +285,41 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         } else {
             throw new MappingException(sprintf('Unable to get Type Mapping of %s entity', $this->class->name));
         }
+    }
+
+    private function hydrateEntityByResult($entity, array $searchResult) {
+        if (isset($searchResult['_source'])) {
+            $searchResult = array_merge($searchResult, $searchResult['_source']);
+        }
+
+        $this->hydrator->hydrate($entity, $searchResult);
+        $this->hydrator->hydrateByAnnotation($entity, Field::class, $searchResult);
+        $this->hydrator->hydrateByAnnotation($entity, MetaField::class, $searchResult);
+
+        return $entity;
+    }
+
+    public function update($entity) {
+        $type = $this->getEntityType();
+        $dataUpdate = $this->hydrator->extractWithAnnotation($entity, Field::class);
+        $_id = $this->hydrator->extract($entity, '_id');
+        $return = [];
+
+        $updated = $this->em->getConnection()->update(
+            $type->getIndex(), $type->getName(), $_id, $dataUpdate, [], $return
+        );
+
+        if ($updated) {
+            $this->hydrateEntityByResult($entity, $return);
+        } else {
+            throw new ElasticOperationException(sprintf('Unable to complete update operation, '
+                . 'with the following elastic return: <br><pre>%s</pre>', var_export($return)));
+        }
+    }
+
+    public function addInsert($entity) {
+        $oid = spl_object_hash($entity);
+        $this->queuedInserts[$oid] = $entity;
     }
 
     public function loadById(array $_idArray, $entity = null) {
@@ -307,16 +343,6 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         return null;
     }
 
-    private function hydrateEntityByResult($entity, array $searchResult) {
-        $hydrator = new SimpleEntityHydrator();
-
-        $hydrator->hydrate($entity, $searchResult);
-
-        if (isset($searchResult['_source'])) {
-            $hydrator->hydrate($entity, $searchResult['_source']);
-        }
-    }
-
     public function delete($entity) {
         $type = $this->getEntityType();
         $return = [];
@@ -331,26 +357,6 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         } else {
             throw new ElasticOperationException(sprintf('Unable to complete update operation, '
                 . 'with the following elastic return: <br><pre>%s</pre>', var_export($return)));
-        }
-    }
-
-    /**
-     * Check Identity values for entity, if there are identity fields,
-     * check if already exists items with such value (unique constraint verification)
-     *
-     * @param object $entity
-     * @throws ElasticConstraintException
-     */
-    private function checkIndentityConstraints($entity) {
-        $identities = $this->getClassMetadata()->getIdentifierValues($entity);
-
-        foreach ($identities as $property => $value) {
-            $element = $this->load([$property => $value]);
-
-            if (boolval($element)) {
-                throw new ElasticConstraintException(sprintf("Unique/IDENTITY field %s already has "
-                    . "a document with value '%s'", $property, $value));
-            }
         }
     }
 }

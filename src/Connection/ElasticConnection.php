@@ -44,6 +44,23 @@ class ElasticConnection implements ElasticConnectionInterface {
         );
 
         if (boolval($mappings)) {
+            foreach ($mappings as $typeName => $mapping) {
+                $properties = $mapping['properties'];
+
+                foreach ($properties as $fieldName => $fieldMap) {
+                    if (isset($fieldMap['type']) && in_array($fieldMap['type'], ['string', 'text', 'keyword'])) {
+                        continue;
+                    }
+
+                    if (isset($mappings[$typeName]['properties'][$fieldName]['index'])) {
+                        unset($mappings[$typeName]['properties'][$fieldName]['index']);
+                    }
+
+                    if (isset($mappings[$typeName]['properties'][$fieldName]['boost'])) {
+                        unset($mappings[$typeName]['properties'][$fieldName]['boost']);
+                    }
+                }
+            }
             $params['body']['mappings'] = $mappings;
         }
 
