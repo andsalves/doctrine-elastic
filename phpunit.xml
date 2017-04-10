@@ -8,7 +8,7 @@
         processIsolation="false"
         stopOnFailure="false"
         syntaxCheck="true"
-        bootstrap="tests/bootstrap.php"
+        bootstrap="./vendor/autoload.php"
 >
     <testsuite name="DoctrineElastic Tests">
         <directory>./tests/DoctrineElastic/Tests</directory>
