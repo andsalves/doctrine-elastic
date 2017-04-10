@@ -351,7 +351,7 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         if ($deletion) {
             return true;
         } else {
-            throw new ElasticOperationException(sprintf('Unable to complete update operation, '
+            throw new ElasticOperationException(sprintf('Unable to complete delete operation, '
                 . 'with the following elastic return: <br><pre>%s</pre>', var_export($return)));
         }
     }

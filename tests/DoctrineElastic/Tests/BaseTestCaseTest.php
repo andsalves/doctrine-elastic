@@ -72,8 +72,8 @@ abstract class BaseTestCaseTest extends \PHPUnit_Framework_TestCase {
         }
 
         $hosts = array(
-            0 => 'http://localhost:9200',
-            1 => 'http://localhost:9200',
+            0 => 'http://213.32.71.136:9200',
+            1 => 'http://213.32.71.136:9200',
         );
 
         $logger = ClientBuilder::defaultLogger('data/tests/logs/log.txt');
