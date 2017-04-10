@@ -10,6 +10,7 @@ use Doctrine\ORM\Configuration;
 use DoctrineElastic\ElasticEntityManager;
 use DoctrineElastic\Mapping\Driver\ElasticAnnotationDriver;
 use Elasticsearch\ClientBuilder;
+use Elasticsearch\Common\Exceptions\TransportException;
 
 /**
  * Base class for PhpUnit test classes
@@ -19,11 +20,15 @@ use Elasticsearch\ClientBuilder;
 abstract class BaseTestCaseTest extends \PHPUnit_Framework_TestCase {
 
     /** @var ElasticEntityManager */
-    protected $_em;
+    protected static $_elasticEntityManager;
 
-    public function setUp() {
-        parent::setUp();
-        $this->_em = $this->_getEntityManager();
+    public function __construct($name = null, array $data = [], $dataName = '') {
+        parent::__construct($name, $data, $dataName);
+        $this->hasElasticConnection();
+    }
+
+    public function testClientConnect() {
+        $this->assertTrue($this->hasElasticConnection(), "There's no elasticsearch connection");
     }
 
     /**
@@ -32,28 +37,28 @@ abstract class BaseTestCaseTest extends \PHPUnit_Framework_TestCase {
      * @return ElasticEntityManager
      */
     protected function _getEntityManager() {
-        if ($this->_em instanceof ElasticEntityManager) {
-            return $this->_em;
+        if (!self::$_elasticEntityManager instanceof ElasticEntityManager) {
+            $ormConfig = new Configuration();
+            $driverChain = new MappingDriverChain();
+            $annotationDriver = new ElasticAnnotationDriver(new AnnotationReader(), []);
+
+            AnnotationRegistry::registerFile(__DIR__ . '/../../../../../doctrine/orm/lib/Doctrine/ORM/Mapping/Driver/DoctrineAnnotations.php');
+            AnnotationRegistry::registerFile(__DIR__ . '/../../../src/Mapping/Driver/ElasticAnnotations.php');
+
+            $driverChain->addDriver($annotationDriver, 'DoctrineElastic\Entity');
+
+            $ormConfig->setMetadataDriverImpl($driverChain);
+            $ormConfig->setProxyDir('data');
+            $ormConfig->setProxyNamespace('DoctrineORMModule\Proxy');
+            $ormConfig->setAutoGenerateProxyClasses(true);
+            $ormConfig->setEntityNamespaces(['DoctrineElastic\Entity']);
+
+            $elastic = $this->_getElasticClient();
+
+            self::$_elasticEntityManager = new ElasticEntityManager($ormConfig, $elastic, new EventManager());
         }
 
-        $ormConfig = new Configuration();
-        $driverChain = new MappingDriverChain();
-        $annotationDriver = new ElasticAnnotationDriver(new AnnotationReader(), []);
-
-        AnnotationRegistry::registerFile(__DIR__ . '/../../../../../doctrine/orm/lib/Doctrine/ORM/Mapping/Driver/DoctrineAnnotations.php');
-        AnnotationRegistry::registerFile(__DIR__ . '/../../../src/Mapping/Driver/ElasticAnnotations.php');
-
-        $driverChain->addDriver($annotationDriver, 'DoctrineElastic\Entity');
-
-        $ormConfig->setMetadataDriverImpl($driverChain);
-        $ormConfig->setProxyDir('data');
-        $ormConfig->setProxyNamespace('DoctrineORMModule\Proxy');
-        $ormConfig->setAutoGenerateProxyClasses(true);
-        $ormConfig->setEntityNamespaces(['DoctrineElastic\Entity']);
-
-        $elastic = $this->_getElasticClient();
-
-        return new ElasticEntityManager($ormConfig, $elastic, new EventManager());
+        return self::$_elasticEntityManager;
     }
 
     /**
@@ -62,6 +67,10 @@ abstract class BaseTestCaseTest extends \PHPUnit_Framework_TestCase {
      * @return \Elasticsearch\Client
      */
     protected function _getElasticClient() {
+        if (self::$_elasticEntityManager instanceof ElasticEntityManager) {
+            return self::$_elasticEntityManager->getConnection()->getElasticClient();
+        }
+
         $hosts = array(
             0 => 'http://localhost:9200',
             1 => 'http://localhost:9200',
@@ -77,5 +86,19 @@ abstract class BaseTestCaseTest extends \PHPUnit_Framework_TestCase {
             ->build();
 
         return $client;
+    }
+
+    protected function hasElasticConnection() {
+        try {
+            $indices = $this->_getElasticClient()->cat()->indices();
+
+            return boolval($indices);
+        } catch (TransportException $ex) {
+            $this->assertTrue(false, 'Could not connect to elasticsearch: ' . $ex->getMessage());
+        } catch (\Exception $ex) {
+            $this->assertTrue(false, 'Could not test to get elasticsearch indices: ' . $ex->getMessage());
+        }
+
+        return false;
     }
 }

@@ -20,6 +20,10 @@ class SearchParser {
             'body' => $searchParams->getBody()
         );
 
+        if (boolval($searchParams->getParent()) && is_string($searchParams->getParent())) {
+            $elasticQuerySearch['routing'] = $searchParams->getParent();
+        }
+
         if (is_numeric($searchParams->getSize())) {
             $elasticQuerySearch['size'] = $searchParams->getSize();
         }

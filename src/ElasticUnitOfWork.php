@@ -337,6 +337,10 @@ class ElasticUnitOfWork {
     }
 
     public function delete($entity) {
+        if(!is_object($entity)){
+            throw new InvalidArgumentException('Trying to schedule a non object to delete');
+        }
+
         $this->scheduleForDelete($entity);
         $this->commitOrder[] = $this->em->getClassMetadata(get_class($entity));
     }

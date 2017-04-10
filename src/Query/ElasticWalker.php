@@ -27,9 +27,6 @@ class ElasticWalker {
     /** @var ElasticQuery */
     protected $query;
 
-    /** @var ElasticExecutor */
-    private $executor;
-
     /** @var string */
     private $_className;
 
@@ -44,15 +41,6 @@ class ElasticWalker {
         $this->walkerHelper = new WalkerHelper();
         $this->_ast = $AST;
         $this->_className = $className;
-    }
-
-    public function getExecutor() {
-        if (!$this->executor) {
-            $searchService = new ElasticSearchService($this->query->getEntityManager()->getConnection());
-            $this->executor = new ElasticExecutor($searchService, $this->_className);
-        }
-
-        return $this->executor;
     }
 
     /**

@@ -307,7 +307,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             'body' => $body
         );
 
-        $params = array_merge_recursive($defaultParams, $mergeParams);
+        $params = array_replace_recursive($defaultParams, $mergeParams);
 
         $return = $this->elastic->search($params);
 

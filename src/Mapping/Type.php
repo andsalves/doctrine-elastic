@@ -30,6 +30,9 @@ class Type implements Annotation {
     /** @var string */
     public $parentClass;
 
+    /** @var array */
+    public $childClasses = [];
+
     /** @return string */
     public function getName() {
         return $this->name ?: self::getDefaultName();
@@ -81,16 +84,32 @@ class Type implements Annotation {
     /**
      * @return string
      */
-    public function getParent() {
-        return $this->parent;
+    public function getParentClass() {
+        return $this->parentClass;
     }
 
     /**
-     * @param string $parent
+     * @param string $parentClass
      * @return Type
      */
-    public function setParent($parent) {
-        $this->parent = $parent;
+    public function setParentClass($parentClass) {
+        $this->parentClass = $parentClass;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getChildClasses() {
+        return $this->childClasses;
+    }
+
+    /**
+     * @param array $childClasses
+     * @return Type
+     */
+    public function setChildClasses(array $childClasses) {
+        $this->childClasses = $childClasses;
         return $this;
     }
 
