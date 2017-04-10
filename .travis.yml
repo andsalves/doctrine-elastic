@@ -7,14 +7,12 @@ php:
 
 before_script:
   - composer self-update
-  - composer install --prefer-source
-  - if [ "$DEPENDENCIES" != "low" ]; then composer update; fi;
-  - if [ "$DEPENDENCIES" == "low" ]; then composer update --prefer-lowest; fi;
+  - composer update
 
 services:
   - elasticsearch
 
 before_script:
   - sleep 10
-  
+
 script: phpunit
