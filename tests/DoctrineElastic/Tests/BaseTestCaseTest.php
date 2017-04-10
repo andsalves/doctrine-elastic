@@ -42,8 +42,8 @@ abstract class BaseTestCaseTest extends \PHPUnit_Framework_TestCase {
             $driverChain = new MappingDriverChain();
             $annotationDriver = new ElasticAnnotationDriver(new AnnotationReader(), []);
 
-            AnnotationRegistry::registerFile(__DIR__ . '/../../../../../doctrine/orm/lib/Doctrine/ORM/Mapping/Driver/DoctrineAnnotations.php');
-            AnnotationRegistry::registerFile(__DIR__ . '/../../../src/Mapping/Driver/ElasticAnnotations.php');
+            AnnotationRegistry::registerFile(getcwd() . '/vendor/doctrine/orm/lib/Doctrine/ORM/Mapping/Driver/DoctrineAnnotations.php');
+            AnnotationRegistry::registerFile(getcwd() . '/src/Mapping/Driver/ElasticAnnotations.php');
 
             $driverChain->addDriver($annotationDriver, 'DoctrineElastic\Entity');
 
@@ -90,9 +90,9 @@ abstract class BaseTestCaseTest extends \PHPUnit_Framework_TestCase {
 
     protected function hasElasticConnection() {
         try {
-            $indices = $this->_getElasticClient()->cat()->indices();
+            $this->_getElasticClient()->cat()->indices();
 
-            return boolval($indices);
+            return true;
         } catch (TransportException $ex) {
             $this->assertTrue(false, 'Could not connect to elasticsearch: ' . $ex->getMessage());
         } catch (\Exception $ex) {
