@@ -7,10 +7,12 @@ php:
 
 before_script:
   - composer self-update
-  - composer install
 
 services:
   - elasticsearch
+
+install:
+  - composer install
 
 before_script:
   - sleep 5
