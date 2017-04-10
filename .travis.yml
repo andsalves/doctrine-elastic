@@ -5,4 +5,10 @@ php:
   - 5.6
   - hhvm
 
+before_script:
+  - composer self-update
+  - composer install --prefer-source
+  - if [ "$DEPENDENCIES" != "low" ]; then composer update; fi;
+  - if [ "$DEPENDENCIES" == "low" ]; then composer update --prefer-lowest; fi;
+
 script: phpunit Test.php
