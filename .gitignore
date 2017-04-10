@@ -1,2 +1,5 @@
 .idea
 data/tests/logs
+vendor
+composer.phar
+composer.lock

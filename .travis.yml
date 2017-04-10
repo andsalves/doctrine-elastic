@@ -11,4 +11,4 @@ before_script:
   - if [ "$DEPENDENCIES" != "low" ]; then composer update; fi;
   - if [ "$DEPENDENCIES" == "low" ]; then composer update --prefer-lowest; fi;
 
-script: phpunit Test.php
+script: phpunit
