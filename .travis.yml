@@ -16,8 +16,5 @@ services:
 
 before_script:
   - sleep 10
-
-before_install:
-  - curl -O https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.4.1/elasticsearch-2.4.1.deb && sudo dpkg -i --force-confnew elasticsearch-2.4.1.deb && sudo service elasticsearch restart
-
+  
 script: phpunit
