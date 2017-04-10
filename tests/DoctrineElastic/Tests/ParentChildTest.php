@@ -23,14 +23,17 @@ class ParentChildTest extends BaseTestCaseTest {
 
     public function __construct($name = null, array $data = [], $dataName = '') {
         parent::__construct($name, $data, $dataName);
-
-        if ($this->_getEntityManager()->getConnection()->indexExists('foo_family')) {
-            $this->_getEntityManager()->getConnection()->deleteIndex('foo_family');
-        }
+        $this->clearIndices();
     }
 
     public function setUp() {
         parent::setUp();
+    }
+
+    private function clearIndices() {
+        if ($this->_getEntityManager()->getConnection()->indexExists('foo_family')) {
+            $this->_getEntityManager()->getConnection()->deleteIndex('foo_family');
+        }
     }
 
     public function testClientConnect() {
@@ -101,5 +104,9 @@ class ParentChildTest extends BaseTestCaseTest {
         } catch (\Exception $ex) {
             $this->assertTrue(false, 'ElasticEntityManager failed to search: ' . $ex->getMessage());
         }
+    }
+
+    public function __destruct() {
+        $this->clearIndices();
     }
 }

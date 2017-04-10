@@ -7,14 +7,17 @@ php:
 
 before_script:
   - composer self-update
+  - composer install
 
 services:
   - elasticsearch
 
-install:
-  - composer install
-
 before_script:
-  - sleep 10
+  - sleep 5
 
-script: phpunit
+script:
+  - mkdir -p build/logs
+  - phpunit --coverage-clover build/logs/clover.xml
+
+after_success:
+  - bin/coveralls -v

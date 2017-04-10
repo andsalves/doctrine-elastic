@@ -29,14 +29,17 @@ class ElasticEntityManagerTest extends BaseTestCaseTest {
 
     public function __construct($name = null, array $data = [], $dataName = '') {
         parent::__construct($name, $data, $dataName);
-
-        if ($this->_getEntityManager()->getConnection()->indexExists('foo_index')) {
-            $this->_getEntityManager()->getConnection()->deleteIndex('foo_index');
-        }
+        $this->clearIndices();
     }
 
     public function setUp() {
         parent::setUp();
+    }
+
+    private function clearIndices() {
+        if ($this->_getEntityManager()->getConnection()->indexExists('foo_index')) {
+            $this->_getEntityManager()->getConnection()->deleteIndex('foo_index');
+        }
     }
 
     public function testClientConnect() {
@@ -179,5 +182,9 @@ class ElasticEntityManagerTest extends BaseTestCaseTest {
         }
 
         $this->assertNotNull(self::$_fooType->_id, "_id was not provided to test ElasticEntityManager::remove method");
+    }
+
+    public function __destruct() {
+        $this->clearIndices();
     }
 }
