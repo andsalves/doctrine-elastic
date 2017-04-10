@@ -23,17 +23,11 @@ class ParentChildTest extends BaseTestCaseTest {
 
     public function __construct($name = null, array $data = [], $dataName = '') {
         parent::__construct($name, $data, $dataName);
-        $this->clearIndices();
+        self::clearIndices();
     }
 
     public function setUp() {
         parent::setUp();
-    }
-
-    private function clearIndices() {
-        if ($this->_getEntityManager()->getConnection()->indexExists('foo_family')) {
-            $this->_getEntityManager()->getConnection()->deleteIndex('foo_family');
-        }
     }
 
     public function testClientConnect() {
@@ -93,7 +87,7 @@ class ParentChildTest extends BaseTestCaseTest {
             );
 
             $noexistentFooChild = $this->_getEntityManager()->getRepository(FooChild::class)->findOneBy(array(
-                '_parent' => '123456789012345'
+                '_parent' => substr(md5(date('YmdHisu')), 0, 20)
             ));
 
             $this->assertNull(
@@ -106,7 +100,13 @@ class ParentChildTest extends BaseTestCaseTest {
         }
     }
 
-    public function __destruct() {
-        $this->clearIndices();
+    private static function clearIndices() {
+        if (self::$_elasticEntityManager->getConnection()->indexExists('foo_family')) {
+            self::$_elasticEntityManager->getConnection()->deleteIndex('foo_family');
+        }
+    }
+
+    public static function tearDownAfterClass() {
+        self::clearIndices();
     }
 }
