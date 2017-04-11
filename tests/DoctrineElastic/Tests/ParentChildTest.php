@@ -85,7 +85,14 @@ class ParentChildTest extends BaseTestCaseTest {
                 'ElasticEntityManager failed to insert data or hydrate entity with _id metafield '
                 . '(find FooChild with findOneBy FooParent _id)'
             );
+        } catch (\Exception $ex) {
+            $this->assertTrue(false, 'ElasticEntityManager failed to search: ' . $ex->getMessage());
+        }
+    }
 
+    /** @depends testClientConnect */
+    public function testFindNoexistentChildFromParent_using_FindOneBy() {
+        try {
             $noexistentFooChild = $this->_getEntityManager()->getRepository(FooChild::class)->findOneBy(array(
                 '_parent' => substr(md5(date('YmdHisu')), 0, 20)
             ));

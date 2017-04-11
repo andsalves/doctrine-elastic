@@ -309,6 +309,12 @@ class ElasticConnection implements ElasticConnectionInterface {
 
         $params = array_replace_recursive($defaultParams, $mergeParams);
 
+        $this->unsetEmpties($params['body']);
+
+        if (empty($params['body'])) {
+            unset($params['body']);
+        }
+
         $return = $this->elastic->search($params);
 
         if (isset($return['hits']['hits'])) {
@@ -316,6 +322,22 @@ class ElasticConnection implements ElasticConnectionInterface {
         }
 
         return [];
+    }
+
+    private function unsetEmpties(array &$array, array &$parent = null) {
+        for ($count = 2; $count > 0; $count--) {
+            foreach ($array as $key => $item) {
+                if (empty($item)) {
+                    unset($array[$key]);
+
+                    if (is_array($parent)) {
+                        $this->unsetEmpties($parent);
+                    }
+                } else if (is_array($item)) {
+                    $this->unsetEmpties($array[$key], $array);
+                }
+            }
+        }
     }
 
     /**

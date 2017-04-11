@@ -25,7 +25,7 @@ use DoctrineElastic\Entity\FooType;
 class ElasticEntityManagerTest extends BaseTestCaseTest {
 
     /** @var FooType */
-    private static $_fooType;
+    protected static $_fooType;
 
     public function __construct($name = null, array $data = [], $dataName = '') {
         parent::__construct($name, $data, $dataName);
@@ -178,7 +178,7 @@ class ElasticEntityManagerTest extends BaseTestCaseTest {
         $this->assertNotNull(self::$_fooType->_id, "_id was not provided to test ElasticEntityManager::remove method");
     }
 
-    private static function clearIndices() {
+    protected static function clearIndices() {
         if (self::$_elasticEntityManager->getConnection()->indexExists('foo_index')) {
             self::$_elasticEntityManager->getConnection()->deleteIndex('foo_index');
         }

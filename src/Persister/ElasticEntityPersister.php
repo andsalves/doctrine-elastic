@@ -109,9 +109,9 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         if (is_array($orderBy)) {
             foreach ($orderBy as $columnName => $order) {
                 if (isset($fieldAnnotations[$columnName])) {
-                    $sort[$fieldAnnotations[$columnName]->name] = $order;
+                    $sort[$fieldAnnotations[$columnName]->name] = ['order' => $order];
                 } else if (isset($metaFieldAnnotations[$columnName])) {
-                    $sort[$metaFieldAnnotations[$columnName]->name] = $order;
+                    $sort[$metaFieldAnnotations[$columnName]->name] = ['order' => $order];
                 }
             }
         }
