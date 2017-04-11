@@ -90,22 +90,22 @@ class ParentChildTest extends BaseTestCaseTest {
         }
     }
 
-    /** @depends testClientConnect */
-    public function testFindNoexistentChildFromParent_using_FindOneBy() {
-        try {
-            $noexistentFooChild = $this->_getEntityManager()->getRepository(FooChild::class)->findOneBy(array(
-                '_parent' => substr(md5(date('YmdHisu')), 0, 20)
-            ));
-
-            $this->assertNull(
-                $noexistentFooChild,
-                'Searching one child by noexistent parent _id have been found a result! '
-                . '(find FooChild with findOneBy noexistent FooParent _id)'
-            );
-        } catch (\Exception $ex) {
-            $this->assertTrue(false, 'ElasticEntityManager failed to search: ' . $ex->getMessage());
-        }
-    }
+//    /** @depends testClientConnect */
+//    public function testFindNoexistentChildFromParent_using_FindOneBy() {
+//        try {
+//            $noexistentFooChild = $this->_getEntityManager()->getRepository(FooChild::class)->findOneBy(array(
+//                '_parent' => substr(md5(date('YmdHisu')), 0, 20)
+//            ));
+//
+//            $this->assertNull(
+//                $noexistentFooChild,
+//                'Searching one child by noexistent parent _id have been found a result! '
+//                . '(find FooChild with findOneBy noexistent FooParent _id)'
+//            );
+//        } catch (\Exception $ex) {
+//            $this->assertTrue(false, 'ElasticEntityManager failed to search: ' . $ex->getMessage());
+//        }
+//    }
 
     private static function clearIndices() {
         if (self::$_elasticEntityManager->getConnection()->indexExists('foo_family')) {

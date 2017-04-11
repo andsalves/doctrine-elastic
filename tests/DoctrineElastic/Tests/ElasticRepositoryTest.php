@@ -65,7 +65,7 @@ class ElasticRepositoryTest extends ElasticEntityManagerTest {
 
                 foreach ($fooEntities as $fooEntity) {
                     $this->assertInstanceOf(
-                        FooType::class, $fooEntity, 
+                        FooType::class, $fooEntity,
                         'Repository::findBy brought entities different of target: ' . FooType::class
                     );
 
