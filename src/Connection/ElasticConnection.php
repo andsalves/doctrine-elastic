@@ -187,6 +187,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             'index' => $index,
             'type' => $type,
             'refresh' => "true",
+            'retry_on_conflict' => 4,
             'body' => array(
                 'doc' => $body
             )
