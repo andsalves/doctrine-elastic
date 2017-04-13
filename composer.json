@@ -1,8 +1,8 @@
 {
     "name": "andsalves/doctrine-elastic",
     "type": "library",
-    "description": "Elasticsearch Adaptation for Doctrine Object-Relational-Mapper for PHP",
-    "keywords": ["elastic", "doctrine", "elasticsearch", "orm", "search", "database"],
+    "description": "Elasticsearch Doctrine Adaptation",
+    "keywords": ["elasticsearch", "doctrine", "elastic", "search", "database", "adaptation", "orm", "entity", "engine", "best", "library"],
     "homepage": "https://packagist.org/packages/andsalves/doctrine-elastic",
     "license": "MIT",
     "authors": [
