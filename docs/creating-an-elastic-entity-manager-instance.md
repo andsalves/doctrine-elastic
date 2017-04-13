@@ -57,7 +57,7 @@ Attempt that this code is only a example, obviously you will create a Factory fo
 
 More details about this code refers more to the Doctrine itself. 
 
-##### DoctrineElastic next versions tends to have less Doctrine dependence, and ElasticEntityManager will be quite simple to create. 
+##### DoctrineElastic next versions tend to have less Doctrine dependence, and ElasticEntityManager will be quite simple to create. 
 
 
 
