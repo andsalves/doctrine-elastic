@@ -3,7 +3,8 @@
     "type": "library",
     "description": "Elasticsearch Adaptation for Doctrine Object-Relational-Mapper for PHP",
     "keywords": ["elastic", "doctrine", "elasticsearch", "orm", "search", "database"],
-    "homepage": "http://www.doctrine-project.org",
+    "homepage": "https://packagist.org/packages/andsalves/doctrine-elastic",
+    "license": "MIT",
     "authors": [
         {"name": "Anderson Alves Nunes de Freitas", "email": "ands.alves.nunes@gmail.com"}
     ],
