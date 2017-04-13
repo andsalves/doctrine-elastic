@@ -328,7 +328,7 @@ class ElasticConnection implements ElasticConnectionInterface {
     private function unsetEmpties(array &$array, array &$parent = null) {
         for ($count = 2; $count > 0; $count--) {
             foreach ($array as $key => $item) {
-                if (empty($item)) {
+                if (is_array($item) && empty($item)) {
                     unset($array[$key]);
 
                     if (is_array($parent)) {
