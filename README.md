@@ -92,15 +92,15 @@ class FooType {
     }
 }
 ```
-This entity represents, in Elasticsearch, a type named 'foo_type', that belongs to an index named 'foo_index'. Note the class annotation @ElasticORM\Type with these informations. The property annotation @ElasticORM\Field represents a field from _source of a document into 'foo_type' type. @ElasticORM\MetaField annotation represents a metafield, like _id. @ElasticORM\MetaField _id is required for an entity, and must to be a public property.
+This entity represents, in Elasticsearch, a type named 'foo_type', that belongs to an index named 'foo_index'. Note the class annotation @ElasticORM\Type with these informations. The property annotation @ElasticORM\Field represents a field from _source of a document into 'foo_type' type. @ElasticORM\MetaField annotation represents a metafield, like _id. @ElasticORM\MetaField _id is required for an entity, and must be a public property.
 
 Only properties with @ElasticORM\Field annotation will be considered as document fields. In elasticsearch, the document column name will be the 'name' property from @ElasticORM\Field annotation from class property, just like 'type' annotation property.
 
 A more detailed explanation about fields customization and types (just like nested and date types, 'format' annotation property etc), will be available soon. 
 
 ### Inserting Documents
-Now is very simple make CRUD operations through ElasticEntityManager. 
-Assuming you have a ElasticEntityManager instance in variable $elasticEntityManager:
+Now is very simple to make CRUD operations through ElasticEntityManager. 
+Assuming you have an ElasticEntityManager instance in a variable called $elasticEntityManager:
 ```php
 $newFoo = new DoctrineElastic\Entity\FooType(); // Or wherever be your entity
 $newFoo->setCustomNumericField(1234);
@@ -111,11 +111,11 @@ $elasticEntityManager->persist($newFoo); // Persisting entity...
 $elasticEntityManager->flush(); // And flushing... Oh God, just like Doctrine!
 ```
 ##### Note 1: 
-Index and type will be created automatically, as well as its mappings.
+Index and type will be created automatically, as well as its mappings, if doesn't exist.
 ##### Note 2: 
-By default, mappings for index analyzable fields will be not_analyzed. DoctrineElastic was made for work this way. However, you can modify this with 'index' @ElasticORM\Field annotation property if you prefer default analized fields. e.g. @ElasticORM\Field(name='mad_field', type='string', index='analyzed'). Attention: Get documents with DoctrineElastic is not guaranteed when you make this, once it's not possible to match exact values always. 
+By default, mappings for analyzable fields will be not_analyzed (index='not_analyzed'). DoctrineElastic was made to work this way. However, you can change it with 'index' @ElasticORM\Field annotation property, if you prefer default analized fields. e.g. @ElasticORM\Field(name='mad_field', type='string', index='analyzed'). Attention: Search documents with ElasticEntityManager is not guaranteed when you make this, once it isn't possible to match exact values always. 
 ##### Note 3:
-DoctrineElastic does not accept TRANSACTIONS (yet). You will find an available 'beginTransaction' method, but it doesn't anything. It is there because ElasticEntityManager implements EntityManagerInterface from Doctrine. This happens with some few other methods. 
+DoctrineElastic does not accept TRANSACTIONS (yet). You will find an available 'beginTransaction' method in ElasticEntityManager, but it doesn't anything. It's there because ElasticEntityManager implements EntityManagerInterface from Doctrine. This happens with some few other methods. 
 
 ##### Note 4:
 Just like in Doctrine, after flush, the entity will have the _id field filled. If you persist an entity with _id field non null, DoctrineElastic will search a doc for update, if doesn't exist, creates this one with passed _id. 
@@ -134,7 +134,7 @@ if (!is_null($myFoo)) {
 ##### Note 1:
 You can use findBy and findAll methods too. 
 ##### Note 2:
-It doesn't matter if index and type exists or not in your Elasticsearch. If it not exists, no documents are returned, also no exception is thrown.
+It doesn't matter if index and type exist or not in your Elasticsearch. If not exist, no documents are returned, also no exception is thrown.
 ##### Note 3:
 To search by _id, use $elasticEntityManager::getReference or $elasticEntityManager::find (they are equivalent in ElasticEntityManager).
 
