@@ -6,6 +6,7 @@ use Elasticsearch\Client;
 
 /**
  * Default elastic connection class for general operations
+ * Notice that the original elastic result of most of operations can be get by $return param
  *
  * @author Ands
  */
@@ -21,6 +22,14 @@ class ElasticConnection implements ElasticConnectionInterface {
         $this->elastic = $elastic;
     }
 
+    /**
+     * @param string $index
+     * @param array|null $mappings
+     * @param array|null $settings
+     * @param array|null $aliases
+     * @param array|null $return
+     * @return bool
+     */
     public function createIndex(
         $index, array $mappings = null, array $settings = null, array $aliases = null, array &$return = null
     ) {
@@ -68,6 +77,11 @@ class ElasticConnection implements ElasticConnectionInterface {
         return false;
     }
 
+    /**
+     * @param string $index
+     * @param array|null $return
+     * @return bool
+     */
     public function deleteIndex($index, array &$return = null) {
         if (!$this->indexExists($index)) {
             throw new \InvalidArgumentException(sprintf("'%s' index does not exists", $index));
@@ -84,6 +98,13 @@ class ElasticConnection implements ElasticConnectionInterface {
         return false;
     }
 
+    /**
+     * @param string $index
+     * @param string $type
+     * @param array $mappings
+     * @param array|null $return
+     * @return bool
+     */
     public function createType($index, $type, array $mappings = [], array &$return = null) {
         if (!$this->indexExists($index)) {
             throw new \InvalidArgumentException(sprintf("%s' index does not exists", $index));
@@ -107,6 +128,14 @@ class ElasticConnection implements ElasticConnectionInterface {
         return false;
     }
 
+    /**
+     * @param string $index
+     * @param string $type
+     * @param array $body
+     * @param array $mergeParams
+     * @param array|null $return
+     * @return bool
+     */
     public function insert($index, $type, array $body, array $mergeParams = [], array &$return = null) {
         if (!$this->indexExists($index)) {
             trigger_error("$index index does not exists at insert attempt");
@@ -138,6 +167,16 @@ class ElasticConnection implements ElasticConnectionInterface {
         return false;
     }
 
+    /**
+     * @param string $index
+     * @param string $type
+     * @param string $_id
+     * @param array $body
+     * @param array $mergeParams
+     * @param array|null $return
+     *
+     * @return bool
+     */
     public function update($index, $type, $_id, array $body = [], array $mergeParams = [], array &$return = null) {
         if (!$this->indexExists($index)) {
             return false;
@@ -148,6 +187,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             'index' => $index,
             'type' => $type,
             'refresh' => "true",
+            'retry_on_conflict' => 4,
             'body' => array(
                 'doc' => $body
             )
@@ -164,6 +204,14 @@ class ElasticConnection implements ElasticConnectionInterface {
         return false;
     }
 
+    /**
+     * @param string $index
+     * @param string $type
+     * @param string $_id
+     * @param array $mergeParams
+     * @param array|null $return
+     * @return bool
+     */
     public function delete($index, $type, $_id, array $mergeParams = [], array &$return = null) {
         if (!$this->indexExists($index)) {
             return false;
@@ -188,13 +236,22 @@ class ElasticConnection implements ElasticConnectionInterface {
     }
 
     public function updateWhere($index, $type, array $where, array &$return = null) {
-        // TODO: Implement updateWhere() method.
+        // TODO
     }
 
     public function deleteWhere($index, $type, array $where, array &$return = null) {
-        // TODO: Implement deleteWhere() method.
+        // TODO
     }
 
+    /**
+     *
+     * @param string $index
+     * @param string $type
+     * @param string $_id
+     * @param array $mergeParams
+     * @param array|null $return
+     * @return array|null
+     */
     public function get($index, $type, $_id, array $mergeParams = [], array &$return = null) {
         if (!$this->indexExists($index)) {
             return null;
@@ -225,7 +282,17 @@ class ElasticConnection implements ElasticConnectionInterface {
         return null;
     }
 
-    public function search($index, $type, array $body = [], array $mergeParams = []) {
+    /**
+     * Returns the [hits][hits] array from query
+     *
+     * @param string $index
+     * @param string $type
+     * @param array $body
+     * @param array $mergeParams
+     * @param array|null $return
+     * @return array
+     */
+    public function search($index, $type, array $body = [], array $mergeParams = [], array &$return = null) {
         if (!$this->indexExists($index)) {
             return [];
         }
@@ -241,27 +308,60 @@ class ElasticConnection implements ElasticConnectionInterface {
             'body' => $body
         );
 
-        $params = array_merge_recursive($defaultParams, $mergeParams);
+        $params = array_replace_recursive($defaultParams, $mergeParams);
 
-        $docment = $this->elastic->search($params);
+        $this->unsetEmpties($params['body']);
 
-        if (isset($docment['found']) && $docment['found']) {
-            return $docment;
+        if (empty($params['body'])) {
+            unset($params['body']);
+        }
+
+        $return = $this->elastic->search($params);
+
+        if (isset($return['hits']['hits'])) {
+            return $return['hits']['hits'];
         }
 
         return [];
     }
 
+    private function unsetEmpties(array &$array, array &$parent = null) {
+        for ($count = 2; $count > 0; $count--) {
+            foreach ($array as $key => $item) {
+                if (is_array($item) && empty($item)) {
+                    unset($array[$key]);
+
+                    if (is_array($parent)) {
+                        $this->unsetEmpties($parent);
+                    }
+                } else if (is_array($item)) {
+                    $this->unsetEmpties($array[$key], $array);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param string $index
+     * @return bool
+     */
     public function indexExists($index) {
         return $this->elastic->indices()->exists(['index' => $index]);
     }
 
+    /**
+     * @param string $index
+     * @param string $type
+     * @return bool
+     */
     public function typeExists($index, $type) {
-        return $this->elastic->indices()->existsType(array(
+        $return = $this->elastic->indices()->existsType(array(
             'index' => $index,
             'type' => $type,
             'ignore_unavailable' => true
         ));
+
+        return boolval($return);
     }
 
     /**

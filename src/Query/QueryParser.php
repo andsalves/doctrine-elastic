@@ -12,7 +12,7 @@ use DoctrineElastic\Elastic\ElasticQuery;
  *
  * @author Ands
  */
-class ElasticParser {
+class QueryParser {
 
     /** @var ElasticQuery */
     protected $query;
@@ -38,16 +38,15 @@ class ElasticParser {
         return $this->_ast;
     }
 
+    /**
+     * Converts ElasticQuery to SearchParams
+     *
+     * @return \DoctrineElastic\Elastic\SearchParams
+     */
     public function parseElasticQuery() {
-        $parserResult = new ElasticParserResult();
-
         $outputWalker = new ElasticWalker($this->query, $this->getAST(), $this->getRootClass());
-        $searchParams = $outputWalker->walkSelectStatement();
 
-        $parserResult->setElasticExecutor($outputWalker->getExecutor());
-        $parserResult->setSearchParams($searchParams);
-
-        return $parserResult;
+        return $outputWalker->walkSelectStatement();
     }
 
     /**

@@ -6,9 +6,9 @@ use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\MappingException;
+use DoctrineElastic\ElasticEntityManager;
 use DoctrineElastic\Elastic\DoctrineElasticEvents;
 use DoctrineElastic\Elastic\SearchParams;
-use DoctrineElastic\ElasticEntityManager;
 use DoctrineElastic\Event\EntityEventArgs;
 use DoctrineElastic\Exception\ElasticConstraintException;
 use DoctrineElastic\Exception\ElasticOperationException;
@@ -17,8 +17,7 @@ use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
 use DoctrineElastic\Mapping\Field;
 use DoctrineElastic\Mapping\MetaField;
 use DoctrineElastic\Mapping\Type;
-use DoctrineElastic\Service\ElasticSearchService;
-use Elasticsearch\Client;
+use DoctrineElastic\Query\ElasticQueryExecutor;
 
 /**
  * Entity Persister for this doctrine elastic extension
@@ -30,19 +29,22 @@ class ElasticEntityPersister extends AbstractEntityPersister {
 
     /** @var array */
     protected $queuedInserts = [];
+
     /** @var AnnotationReader */
     private $annotationReader;
-    /** @var ElasticSearchService */
-    private $elasticSearchService;
+
+    /** @var ElasticQueryExecutor */
+    private $queryExecutor;
+
     /** @var AnnotationEntityHydrator */
     private $hydrator;
 
-    public function __construct(ElasticEntityManager $em, ClassMetadata $class, Client $elastic) {
-        parent::__construct($em, $class, $elastic);
+    public function __construct(ElasticEntityManager $em, ClassMetadata $classMetadata) {
+        parent::__construct($em, $classMetadata);
         $this->annotationReader = new AnnotationReader();
-        $this->elasticSearchService = new ElasticSearchService($em->getConnection());
+        $this->queryExecutor = new ElasticQueryExecutor($em);
         $this->hydrator = new AnnotationEntityHydrator();
-        $this->validateEntity($class->name);
+        $this->validateEntity($classMetadata->name);
     }
 
     private function validateEntity($className) {
@@ -67,6 +69,65 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         }
     }
 
+    public function loadAll(array $criteria = [], array $orderBy = null, $limit = null, $offset = null) {
+        $classMetadata = $this->getClassMetadata();
+        $className = $classMetadata->getName();
+        $type = $this->getEntityType();
+        $sort = $must = [];
+        $body = ['query' => ['bool' => ['must' => $must]]];
+        /** @var Field $annotationProperty */
+        $fieldAnnotations = $this->hydrator->extractSpecAnnotations($className, Field::class);
+        /** @var MetaField[] $metaFieldAnnotations */
+        $metaFieldAnnotations = $this->hydrator->extractSpecAnnotations($className, MetaField::class);
+        $searchParams = new SearchParams();
+
+        foreach ($criteria as $columnName => $value) {
+            $annotation = null;
+            if (isset($fieldAnnotations[$columnName])) {
+                $annotation = $fieldAnnotations[$columnName];
+            } else if (isset($metaFieldAnnotations[$columnName])) {
+                $annotation = $metaFieldAnnotations[$columnName];
+            }
+
+            if (is_null($annotation)) {
+                $msg = sprintf("field/metafield for column '%s' doesn't exist in %s entity class",
+                    $columnName, $classMetadata->getName());
+                throw new InvalidParamsException($msg);
+            }
+
+            if ($annotation->name === '_parent') {
+                $searchParams->setParent($criteria[$columnName]);
+            } else {
+                $must[] = array(
+                    'match' => array(
+                        $annotation->name => $criteria[$columnName],
+                    )
+                );
+            }
+        }
+
+        if (is_array($orderBy)) {
+            foreach ($orderBy as $columnName => $order) {
+                if (isset($fieldAnnotations[$columnName])) {
+                    $sort[$fieldAnnotations[$columnName]->name] = ['order' => $order];
+                } else if (isset($metaFieldAnnotations[$columnName])) {
+                    $sort[$metaFieldAnnotations[$columnName]->name] = ['order' => $order];
+                }
+            }
+        }
+
+        $body['query']['bool']['must'] = $must;
+
+        $searchParams->setIndex($type->getIndex());
+        $searchParams->setType($type->getName());
+        $searchParams->setBody($body);
+        $searchParams->setSize($limit);
+        $searchParams->setSort($sort);
+        $searchParams->setFrom($offset);
+
+        return $this->queryExecutor->execute($searchParams, $classMetadata->name);
+    }
+
     public function getAnnotionReader() {
         return $this->annotationReader;
     }
@@ -84,11 +145,15 @@ class ElasticEntityPersister extends AbstractEntityPersister {
             $metaFieldsData = $this->hydrator->extractWithAnnotation($entityCopy, MetaField::class);
             $mergeParams = [];
 
-            if (isset($metaFieldsData['_id'])) {
+            if (array_key_exists('_id', $metaFieldsData) && !empty($metaFieldsData['_id'])) {
                 $mergeParams['id'] = $metaFieldsData['_id'];
             }
 
-            $this->createTypeIfNotExists();
+            if (isset($metaFieldsData['_parent'])) {
+                $mergeParams['parent'] = $metaFieldsData['_parent'];
+            }
+
+            $this->createTypeIfNotExists($type, $this->getClassMetadata()->name);
 
             $this->checkIndentityConstraints($entityCopy);
             $return = [];
@@ -109,11 +174,18 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         }
     }
 
-    private function createTypeIfNotExists() {
-        $type = $this->getEntityType();
+    /**
+     * @param Type $type
+     * @param string $className
+     * @throws ElasticConstraintException
+     */
+    private function createTypeIfNotExists(Type $type, $className) {
+        foreach ($type->getChildClasses() as $childClass) {
+            $this->createTypeIfNotExists($this->getEntityType($childClass), $childClass);
+        }
+
         $indexName = $type->getIndex();
         $typeName = $type->getName();
-        $className = $this->class->reflClass->name;
 
         if (!$this->em->getConnection()->typeExists($indexName, $typeName)) {
             $propertiesMapping = [];
@@ -140,6 +212,18 @@ class ElasticEntityPersister extends AbstractEntityPersister {
                     'properties' => $propertiesMapping
                 )
             );
+
+            if ($type->getParentClass()) {
+                $refParentClass = new \ReflectionClass($type->getParentClass());
+                /** @var Type $parentType */
+                $parentType = $this->getAnnotionReader()->getClassAnnotation($refParentClass, Type::class);
+
+                if ($parentType->getIndex() != $type->getIndex()) {
+                    throw new ElasticConstraintException('Child and parent types have different indices. ');
+                }
+
+                $mappings[$typeName]['_parent'] = ['type' => $parentType->getName()];
+            }
 
             if (!$this->em->getConnection()->indexExists($indexName)) {
                 $this->em->getConnection()->createIndex($indexName, $mappings);
@@ -178,78 +262,19 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         return count($results) ? $results[0] : null;
     }
 
-    public function loadAll(array $criteria = [], array $orderBy = null, $limit = null, $offset = null) {
-        $classMetadata = $this->getClassMetadata();
-        $className = $classMetadata->getName();
-        $type = $this->getEntityType();
-
-        $sort = $must = [];
-        $body = ['query' => ['bool' => ['must' => $must]]];
-        /** @var Field $annotationProperty */
-        $fieldAnnotations = $this->hydrator->extractSpecAnnotations($className, Field::class);
-        /** @var MetaField[] $metaFieldAnnotations */
-        $metaFieldAnnotations = $this->hydrator->extractSpecAnnotations($className, MetaField::class);
-
-        foreach ($criteria as $columnName => $value) {
-            $annotation = null;
-            if (isset($fieldAnnotations[$columnName])) {
-                $annotation = $fieldAnnotations[$columnName];
-            } else if (isset($metaFieldAnnotations[$columnName])) {
-                $annotation = $metaFieldAnnotations[$columnName];
-            }
-
-            if (is_null($annotation)) {
-                $msg = sprintf("field/metafield for column '%s' doesn't exist in %s entity class",
-                    $columnName, $classMetadata->getName());
-                throw new InvalidParamsException($msg);
-            }
-
-            $must[] = array(
-                'match' => array(
-                    $annotation->name => $criteria[$columnName],
-                )
-            );
-        }
-
-        if (is_array($orderBy)) {
-            foreach ($orderBy as $columnName => $order) {
-                if (isset($fieldAnnotations[$columnName])) {
-                    $sort[$fieldAnnotations[$columnName]->name] = $order;
-                } else if (isset($metaFieldAnnotations[$columnName])) {
-                    $sort[$metaFieldAnnotations[$columnName]->name] = $order;
-                }
-            }
-        }
-
-        $body['query']['bool']['must'] = $must;
-
-        $searchParams = new SearchParams();
-        $searchParams->setIndex($type->getIndex());
-        $searchParams->setType($type->getName());
-        $searchParams->setBody($body);
-        $searchParams->setSize($limit);
-        $searchParams->setSort($sort);
-        $searchParams->setFrom($offset);
-
-        $arrayResults = $this->elasticSearchService->searchAsIterator($searchParams)->getArrayCopy();
-        $results = [];
-        $entityClass = $classMetadata->name;
-
-        foreach ($arrayResults as $arrayResult) {
-            $results[] = $this->hydrateEntityByResult(new $entityClass(), $arrayResult);
-        }
-
-        return $results;
-    }
-
     /**
+     * @param null|string $className
      * @return Type
      * @throws MappingException
      */
-    private function getEntityType() {
-        $type = $this->annotationReader->getClassAnnotation(
-            $this->getClassMetadata()->getReflectionClass(), Type::class
-        );
+    private function getEntityType($className = null) {
+        if (is_string($className) && boolval($className)) {
+            $refClass = new \ReflectionClass($className);
+        } else {
+            $refClass = $this->getClassMetadata()->getReflectionClass();
+        }
+
+        $type = $this->annotationReader->getClassAnnotation($refClass, Type::class);
 
         if ($type instanceof Type) {
             return $type;
@@ -326,7 +351,7 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         if ($deletion) {
             return true;
         } else {
-            throw new ElasticOperationException(sprintf('Unable to complete update operation, '
+            throw new ElasticOperationException(sprintf('Unable to complete delete operation, '
                 . 'with the following elastic return: <br><pre>%s</pre>', var_export($return)));
         }
     }

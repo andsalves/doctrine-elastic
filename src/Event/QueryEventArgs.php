@@ -27,7 +27,7 @@ class QueryEventArgs extends EventArgs {
     }
 
     /** @param array $results */
-    public function setResults($results) {
+    public function setResults(&$results) {
         $this->results = $results;
     }
 

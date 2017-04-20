@@ -9,11 +9,13 @@ use Doctrine\ORM\Query\AST\ComparisonExpression;
 use Doctrine\ORM\Query\AST\ConditionalExpression;
 use Doctrine\ORM\Query\AST\ConditionalPrimary;
 use Doctrine\ORM\Query\AST\ConditionalTerm;
+use Doctrine\ORM\Query\AST\InExpression;
 use Doctrine\ORM\Query\AST\LikeExpression;
 use Doctrine\ORM\Query\AST\Literal;
 use Doctrine\ORM\Query\AST\Node;
 use Doctrine\ORM\Query\AST\NullComparisonExpression;
 use Doctrine\ORM\Query\AST\PathExpression;
+use Doctrine\ORM\Query\AST\SimpleArithmeticExpression;
 use Doctrine\ORM\Query\AST\WhereClause;
 use DoctrineElastic\Elastic\ElasticQuery;
 use DoctrineElastic\Elastic\SearchParams;
@@ -21,6 +23,7 @@ use DoctrineElastic\Exception\InvalidOperatorException;
 use DoctrineElastic\Exception\InvalidParamsException;
 use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
 use DoctrineElastic\Mapping\Field;
+use DoctrineElastic\Mapping\MetaField;
 use DoctrineElastic\Query\Walker\Helper\WalkerHelper;
 
 /**
@@ -50,7 +53,10 @@ class WhereWalker {
         $this->walkerHelper = $walkerHelper;
         $this->hydrator = new AnnotationEntityHydrator();
 
-        $this->fieldAnnotations = $this->hydrator->extractSpecAnnotations($className, Field::class);
+        $fieldAnnotations = $this->hydrator->extractSpecAnnotations($className, Field::class);
+        $metaFieldAnnotations = $this->hydrator->extractSpecAnnotations($className, MetaField::class);
+
+        $this->fieldAnnotations = array_merge($fieldAnnotations, $metaFieldAnnotations);
     }
 
     private function fetchTermsAndFactors(Node $node) {
@@ -170,8 +176,40 @@ class WhereWalker {
                 /** @var NullComparisonExpression $node */
                 $this->walkNullComparissionExpression($node, $searchParams);
                 break;
+            case InExpression::class:
+                /** @var InExpression $node */
+                $this->walkInExpression($node, $searchParams);
+                break;
             default:
                 throw new InvalidOperatorException(sprintf('%s operation not allowed', get_class($node)));
+        }
+    }
+
+    private function walkInExpression(InExpression $inExpression, SearchParams $searchParams) {
+        if (!$inExpression->expression->isSimpleArithmeticExpression()) {
+            throw new QueryException("'IN' Expression is not allowed if not a simple IN query. ");
+        }
+
+        $pathExpr = $inExpression->expression->simpleArithmeticExpression;
+
+        if ($pathExpr instanceof PathExpression) {
+            $childSearchParams = clone $searchParams;
+            $childSearchParams->setBody([]);
+            $parentBody = $searchParams->getBody();
+            $operator = $inExpression->not ? OperatorsMap::NEQ : OperatorsMap::EQ;
+
+            /** @var Literal $literal */
+            foreach ($inExpression->literals as $literal) {
+                $conditional = new ComparisonExpression($pathExpr, $operator, $literal);
+
+                $this->walkComparisonExpression($conditional, $childSearchParams);
+            }
+
+            $boolOp = $inExpression->not ? 'must' : 'should';
+            $this->walkerHelper->addSubQueryStatement($childSearchParams->getBody(), $parentBody, $boolOp);
+            $searchParams->setBody($parentBody);
+        } else {
+            throw new QueryException("'IN' expression must to point to a valid field path expression. ");
         }
     }
 
@@ -184,14 +222,29 @@ class WhereWalker {
         $operator = $compExpr->operator;
 
         /** @var PathExpression $pathExpr */
-        $pathExpr = $leftExpr->simpleArithmeticExpression;
+        if ($leftExpr instanceof PathExpression) {
+            $pathExpr = $leftExpr;
+        } else {
+            $pathExpr = $leftExpr->simpleArithmeticExpression;
+        }
 
-        /** @var Literal $valueExpr */
-        $valueExpr = $rightExpr->simpleArithmeticExpression;
+        /** @var Literal|PathExpression $valueExpr */
+        if ($rightExpr instanceof Literal) {
+            $valueExpr = $rightExpr;
+        } else {
+            $valueExpr = $rightExpr->simpleArithmeticExpression;
+        }
 
         $ESfield = $this->getFieldOrThrowError($pathExpr->field);
         $field = $ESfield->name;
-        $value = $valueExpr->value;
+
+        if ($valueExpr instanceof Literal) {
+            $value = $valueExpr->value;
+        } else if ($valueExpr instanceof PathExpression) {
+            $value = $valueExpr->identificationVariable;
+        } else {
+            throw new \Doctrine\ORM\Query\QueryException("Right side expression for '$field' is not suported. ");
+        }
 
         $this->addBodyStatement($field, $operator, $value, $searchParams);
     }

@@ -8,7 +8,6 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\PersistentCollection;
 use Doctrine\ORM\Persisters\Entity\EntityPersister;
 use DoctrineElastic\ElasticEntityManager;
-use Elasticsearch\Client;
 
 /**
  * Base implementation for ElasticEntityPersister
@@ -23,19 +22,14 @@ abstract class AbstractEntityPersister implements EntityPersister {
     /** @var \Doctrine\ORM\Mapping\QuoteStrategy */
     protected $quoteStrategy;
 
-
-    /** @var Client */
-    protected $elastic;
-
     /** @var ElasticEntityManager */
     protected $em;
 
     /** @var ClassMetadata */
     protected $class;
 
-    public function __construct(EntityManagerInterface $em, ClassMetadata $class, Client $elastic) {
-        $this->elastic = $elastic;
-        $this->class = $class;
+    public function __construct(EntityManagerInterface $em, ClassMetadata $classMetadata) {
+        $this->class = $classMetadata;
         $this->em = $em;
         $this->quoteStrategy = $this->em->getConfiguration()->getQuoteStrategy();
     }

@@ -16,6 +16,8 @@ class SearchParams {
 
     protected $type;
 
+    protected $parent;
+
     protected $body = [];
 
     protected $from = 0;
@@ -119,6 +121,23 @@ class SearchParams {
         $this->from = $from;
         return $this;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getParent() {
+        return $this->parent;
+    }
+
+    /**
+     * @param mixed $parent
+     * @return SearchParams
+     */
+    public function setParent($parent) {
+        $this->parent = $parent;
+        return $this;
+    }
+
 
     public function isValid() {
         return boolval($this->index);

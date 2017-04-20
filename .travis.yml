@@ -1,0 +1,27 @@
+sudo: false
+language: php
+
+php:
+  - 5.6
+  - hhvm
+
+before_script:
+  - composer self-update
+
+services:
+  - elasticsearch
+
+install:
+  - composer install
+
+before_script:
+  - sleep 5
+
+before_script:
+  - mkdir -p build/logs
+
+script:
+  - phpunit --coverage-clover build/logs/clover.xml
+
+after_success:
+  - sh -c 'if [ "$TRAVIS_PHP_VERSION" != "hhvm" ]; then php vendor/bin/coveralls -v; fi;'
