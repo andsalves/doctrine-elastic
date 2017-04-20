@@ -3,6 +3,7 @@
 namespace DoctrineElastic\Mapping;
 
 use Doctrine\ORM\Mapping\Annotation;
+use DoctrineElastic\Helper\IndexHelper;
 
 /**
  * Represents a type for entity, with name and index
@@ -62,6 +63,7 @@ class Type implements Annotation {
 
     /** @param string $defaultIndex */
     public static function setDefaultIndex($defaultIndex) {
+        IndexHelper::clearIndex($defaultIndex);
         self::$defaultIndex = $defaultIndex;
     }
 
