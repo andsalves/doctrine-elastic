@@ -1,14 +1,11 @@
 <?php
 
-/**
- * Created by ToOR.
- * Date: 20/04/17
- * Time: 15:43
- * Email: iuribrindeiro@gmail.com
- */
-
 namespace DoctrineElastic\Helper;
 
+/**
+ * @author iuribrindeiro
+ *
+ */
 class IndexHelper
 {
     /**
