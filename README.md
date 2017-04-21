@@ -8,12 +8,14 @@ Doctrine Adaptation Library for Elasticsearch.
 We can find about how to create an ElasticEntityManager in docs at https://github.com/andsalves/doctrine-elastic/blob/master/docs/creating-an-elastic-entity-manager-instance.md
 
 ### Creating a working DoctrineElastic Entity
-Just like Doctrine, we need to set some annotations in our entities, here is a example:
+Just like Doctrine, we need to set some annotations in our entities, here is an example:
 ```php
 <?php
 namespace DoctrineElastic\Entity;
+
 use Doctrine\ORM\Mapping as ORM;
 use DoctrineElastic\Mapping as ElasticORM;
+
 /**
  * @author Ands
  *
@@ -21,6 +23,7 @@ use DoctrineElastic\Mapping as ElasticORM;
  * @ORM\Entity
  */
 class FooType {
+
     /**
      * @var string
      *
@@ -30,30 +33,35 @@ class FooType {
      * @ORM\Column(name="_id", type="integer")
      */
     public $_id;
+
     /**
      * @var int
      *
      * @ElasticORM\Field(name="custom_numeric_field", type="integer")
      */
     private $customNumericField;
+    
     /**
      * @var string
      *
      * @ElasticORM\Field(name="custom_field", type="string")
      */
     private $customField;
+    
     /**
      * @var array
      *
      * @ElasticORM\Field(name="custom_nested_field", type="nested")
      */
     private $customNestedField = [];
+    
     /**
      * @return int
      */
     public function getCustomNumericField() {
         return $this->customNumericField;
     }
+    
     /**
      * @param int $customNumericField
      * @return FooType
@@ -62,12 +70,14 @@ class FooType {
         $this->customNumericField = $customNumericField;
         return $this;
     }
+    
     /**
      * @return string
      */
     public function getCustomField() {
         return $this->customField;
     }
+    
     /**
      * @param string $customField
      * @return FooType
@@ -76,12 +86,14 @@ class FooType {
         $this->customField = $customField;
         return $this;
     }
+    
     /**
      * @return array
      */
     public function getCustomNestedField() {
         return $this->customNestedField;
     }
+    
     /**
      * @param array $customNestedField
      * @return FooType
@@ -99,7 +111,7 @@ Only properties with @ElasticORM\Field annotation will be considered as document
 A more detailed explanation about fields customization and types (just like nested and date types, 'format' annotation property etc), will be available soon. 
 
 ### Inserting Documents
-Now is very simple to make CRUD operations through ElasticEntityManager. 
+Now, is very simple to make CRUD operations through ElasticEntityManager. 
 Assuming you have an ElasticEntityManager instance in a variable called $elasticEntityManager:
 ```php
 $newFoo = new DoctrineElastic\Entity\FooType(); // Or wherever be your entity
@@ -141,7 +153,6 @@ To search by _id, use $elasticEntityManager::getReference or $elasticEntityManag
 ### Removing Documents
 ```php
 $myFoo = $elasticEntityManager->getRepository(DoctrineElastic\Entity\FooType::class)->findOneBy(['customNumericField' => 1234]);
-
 
 if (!is_null($myFoo)) {
     // Let's delete this one
