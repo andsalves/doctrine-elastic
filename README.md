@@ -1,7 +1,7 @@
 # Doctrine-Elastic
 Doctrine Adaptation Library for Elasticsearch.
 
-[![Build Status](https://travis-ci.org/andsalves/doctrine-elastic.svg?branch=master)](https://travis-ci.org/andsalves/doctrine-elastic) [![Coverage Status](https://coveralls.io/repos/github/andsalves/doctrine-elastic/badge.svg)](https://coveralls.io/github/andsalves/doctrine-elastic)
+[![Build Status](https://travis-ci.org/andsalves/doctrine-elastic.svg?branch=master)](https://travis-ci.org/andsalves/doctrine-elastic) [![Coverage Status](https://coveralls.io/repos/github/andsalves/doctrine-elastic/badge.svg)](https://coveralls.io/github/andsalves/doctrine-elastic) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/andsalves/doctrine-elastic/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/andsalves/doctrine-elastic/?branch=master)
 
 ## Get Started
 ### Create a ElasticEntityManager
