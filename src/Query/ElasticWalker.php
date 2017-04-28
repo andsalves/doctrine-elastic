@@ -103,13 +103,18 @@ class ElasticWalker {
     }
 
     private function walkOrderByClause(OrderByClause $orderByClause, SearchParams $searchParams) {
+        $sort = [];
+
         /** @var OrderByItem $item */
         foreach ($orderByClause->orderByItems as $item) {
             $order = $item->type;
             $propertyName = $item->expression->field;
             $ESField = $this->walkerHelper->getEntityElasticField($propertyName, $this->_className, $this->query);
+            $sort[$ESField->name] = strtolower($order);
+        }
 
-            $searchParams->setSort([$ESField->name => strtolower($order)]);
+        if (!empty($sort)) {
+            $searchParams->setSort($sort);
         }
     }
 
