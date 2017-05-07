@@ -7,7 +7,6 @@ use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\ResultSetMapping;
-use Doctrine\ORM\Repository\DefaultRepositoryFactory;
 use DoctrineElastic\Connection\ElasticConnection;
 use DoctrineElastic\Elastic\DoctrineElasticEvents;
 use DoctrineElastic\Elastic\ElasticQuery;
@@ -16,8 +15,7 @@ use DoctrineElastic\Listener\DeleteListener;
 use DoctrineElastic\Listener\InsertListener;
 use DoctrineElastic\Listener\QueryListener;
 use DoctrineElastic\Listener\UpdateListener;
-use DoctrineElastic\Mapping\ElasticClassMetadataFactory;
-use DoctrineElastic\Service\ElasticSearchService;
+use DoctrineElastic\Repository\ElasticRepositoryManager;
 use Elasticsearch\Client;
 
 /**
@@ -27,8 +25,8 @@ use Elasticsearch\Client;
  */
 class ElasticEntityManager implements EntityManagerInterface {
 
-    /** @var DefaultRepositoryFactory */
-    protected $repositoryFactory;
+    /** @var ElasticRepositoryManager */
+    protected $repositoryManager;
 
     /** @var Configuration */
     protected $config;
@@ -45,28 +43,16 @@ class ElasticEntityManager implements EntityManagerInterface {
     /** @var Client */
     private $elastic;
 
-    /** @var ElasticSearchService */
-    private $searchService;
-
     /** @var ElasticConnection */
     protected $conn;
-    /**
-     * @var ElasticClassMetadataFactory
-     */
-    protected $metadataFactory;
 
-    public function __construct(Configuration $config, Client $elastic, EventManager $eventManager) {
-        $this->config = $config;
+    public function __construct(Client $elastic, EventManager $eventManager = null) {
         $this->eventManager = $eventManager;
         $this->conn = new ElasticConnection($elastic);
 
-        $this->metadataFactory = new ElasticClassMetadataFactory($this);
-        $this->metadataFactory->setCacheDriver($this->config->getMetadataCacheImpl());
-
-        $this->repositoryFactory = new DefaultRepositoryFactory();
+        $this->repositoryManager = new ElasticRepositoryManager();
         $this->unitOfWork = new ElasticUnitOfWork($this, $elastic);
         $this->elastic = $elastic;
-        $this->searchService = new ElasticSearchService($this->conn);
         $this->registerEventsListeners();
     }
 
@@ -100,7 +86,7 @@ class ElasticEntityManager implements EntityManagerInterface {
     }
 
     public function getRepository($className) {
-        return $this->repositoryFactory->getRepository($this, $className);
+        return $this->repositoryManager->getRepository($this, $className);
     }
 
     public function getReference($entityName, $id) {
@@ -120,7 +106,7 @@ class ElasticEntityManager implements EntityManagerInterface {
     }
 
     public function getCache() {
-        // TODO: Implement getCache() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     /**
@@ -139,19 +125,19 @@ class ElasticEntityManager implements EntityManagerInterface {
     }
 
     public function beginTransaction() {
-        // TODO: Implement beginTransaction() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function transactional($func) {
-        // TODO: Implement transactional() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function commit() {
-        // TODO: Implement commit() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function rollback() {
-        // TODO: Implement rollback() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function createQuery($dql = '') {
@@ -165,15 +151,15 @@ class ElasticEntityManager implements EntityManagerInterface {
     }
 
     public function createNamedQuery($name) {
-        // TODO: Implement createNamedQuery() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function createNativeQuery($sql, ResultSetMapping $rsm) {
-        // TODO: Implement createNativeQuery() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function createNamedNativeQuery($name) {
-        // TODO: Implement createNamedNativeQuery() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function createQueryBuilder() {
@@ -181,55 +167,59 @@ class ElasticEntityManager implements EntityManagerInterface {
     }
 
     public function getPartialReference($entityName, $identifier) {
-        // TODO: Implement getPartialReference() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function close() {
-        // TODO: Implement close() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function copy($entity, $deep = false) {
-        // TODO: Implement copy() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function lock($entity, $lockMode, $lockVersion = null) {
-        // TODO: Implement lock() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function getEventManager() {
+        if (is_null($this->eventManager)) {
+            $this->eventManager = new EventManager();
+        }
+
         return $this->eventManager;
     }
 
     public function getConfiguration() {
-        return $this->config;
+        return [];
     }
 
     public function isOpen() {
-        // TODO: Implement isOpen() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function getHydrator($hydrationMode) {
-        // TODO: Implement getHydrator() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function newHydrator($hydrationMode = null) {
-        // TODO: Implement newHydrator() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function getProxyFactory() {
-        // TODO: Implement getProxyFactory() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function getFilters() {
-        // TODO: Implement getFilters() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function isFiltersStateClean() {
-        // TODO: Implement isFiltersStateClean() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function hasFilters() {
-        // TODO: Implement hasFilters() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function persist($object) {
@@ -241,19 +231,19 @@ class ElasticEntityManager implements EntityManagerInterface {
     }
 
     public function merge($object) {
-        // TODO: Implement merge() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function clear($objectName = null) {
-        // TODO: Implement clear() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function detach($object) {
-        // TODO: Implement detach() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function refresh($object) {
-        // TODO: Implement refresh() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function flush($entity = null) {
@@ -261,18 +251,18 @@ class ElasticEntityManager implements EntityManagerInterface {
     }
 
     public function getMetadataFactory() {
-        return $this->metadataFactory;
+        trigger_error(__METHOD__ . ' method not supported. ');
     }
 
     public function initializeObject($obj) {
-        // TODO: Implement initializeObject() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function contains($object) {
-        // TODO: Implement contains() method.
+        trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
     public function getClassMetadata($className) {
-        return $this->metadataFactory->getMetadataFor($className);
+        trigger_error(__METHOD__ . ' method not supported. ');
     }
 }

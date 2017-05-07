@@ -2,9 +2,7 @@
 
 namespace DoctrineElastic\Query\Walker\Helper;
 
-use DoctrineElastic\Elastic\ElasticQuery;
 use DoctrineElastic\Exception\InvalidOperatorException;
-use DoctrineElastic\Mapping\Field;
 use DoctrineElastic\Query\Walker\OperatorsMap;
 
 /**
@@ -97,23 +95,5 @@ class WalkerHelper {
         }
 
         $body = array_merge_recursive($body, $bodyTemp);
-    }
-
-    /**
-     * @param $propertyName
-     * @param $className
-     * @param ElasticQuery $query
-     * @return Field
-     */
-    public function getEntityElasticField($propertyName, $className, ElasticQuery $query) {
-        $classMetadata = $query->getEntityManager()->getClassMetadata($className);
-
-        $entityPersiter = $query->getEntityManager()->getUnitOfWork()
-            ->getEntityPersister($className);
-        /** @var Field $type */
-        $field = $entityPersiter->getAnnotionReader()
-            ->getPropertyAnnotation($classMetadata->getReflectionProperty($propertyName), Field::class);
-
-        return $field;
     }
 }

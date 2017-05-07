@@ -4,7 +4,6 @@ namespace DoctrineElastic\Persister;
 
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\PersistentCollection;
 use Doctrine\ORM\Persisters\Entity\EntityPersister;
 use DoctrineElastic\ElasticEntityManager;
@@ -16,30 +15,20 @@ use DoctrineElastic\ElasticEntityManager;
  */
 abstract class AbstractEntityPersister implements EntityPersister {
 
-    /** @var EntityPersister */
-    protected $wrapped;
-
     /** @var \Doctrine\ORM\Mapping\QuoteStrategy */
     protected $quoteStrategy;
 
     /** @var ElasticEntityManager */
     protected $em;
 
-    /** @var ClassMetadata */
-    protected $class;
-
-    public function __construct(EntityManagerInterface $em, ClassMetadata $classMetadata) {
-        $this->class = $classMetadata;
+    public function __construct(EntityManagerInterface $em) {
         $this->em = $em;
         $this->quoteStrategy = $this->em->getConfiguration()->getQuoteStrategy();
     }
 
-
-    /**
-     * @return \Doctrine\ORM\Mapping\ClassMetadata
-     */
     public function getClassMetadata() {
-        return $this->class;
+        trigger_error(__METHOD__ . ' method not supported. ');
+        return null;
     }
 
     /**
@@ -48,7 +37,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      * @return \Doctrine\ORM\Query\ResultSetMapping
      */
     public function getResultSetMapping() {
-        // TODO: Implement getResultSetMapping() method.
+        trigger_error(__METHOD__ . ' method not supported. ');
+        return null;
     }
 
     /**
@@ -57,7 +47,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      * @return array
      */
     public function getInserts() {
-        // TODO: Implement getInserts() method.
+        trigger_error(__METHOD__ . ' method not supported. ');
+        return null;
     }
 
     /**
@@ -69,7 +60,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      * @return string
      */
     public function getInsertSQL() {
-        // TODO: Implement getInsertSQL() method.
+        trigger_error(__METHOD__ . ' method not supported. ');
+        return null;
     }
 
     /**

@@ -12,10 +12,10 @@ use Doctrine\ORM\Query\AST\SelectStatement;
 use Doctrine\ORM\Query\AST\WhereClause;
 use DoctrineElastic\Elastic\ElasticQuery;
 use DoctrineElastic\Elastic\SearchParams;
-use DoctrineElastic\Mapping\Type;
+use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
+use DoctrineElastic\Mapping\Field;
 use DoctrineElastic\Query\Walker\Helper\WalkerHelper;
 use DoctrineElastic\Query\Walker\WhereWalker;
-use DoctrineElastic\Service\ElasticSearchService;
 
 /**
  * Main walker for queries
@@ -51,7 +51,8 @@ class ElasticWalker {
         $size = $this->query->getMaxResults();
         $offset = $this->query->getFirstResult();
 
-        $type = $this->getEntityElasticType($this->_className);
+        $persister = $this->query->getEntityManager()->getUnitOfWork()->getEntityPersister($this->_className);
+        $type = $persister->getEntityType();
 
         $searchParams->setType($type->getName());
         $searchParams->setIndex($type->getIndex());
@@ -109,7 +110,12 @@ class ElasticWalker {
         foreach ($orderByClause->orderByItems as $item) {
             $order = $item->type;
             $propertyName = $item->expression->field;
-            $ESField = $this->walkerHelper->getEntityElasticField($propertyName, $this->_className, $this->query);
+            $ESField = $this->getEntityElasticField($propertyName, $this->_className);
+
+            if (is_null($ESField)) {
+                continue;
+            }
+
             $sort[$ESField->name] = strtolower($order);
         }
 
@@ -119,18 +125,14 @@ class ElasticWalker {
     }
 
     /**
+     * @param $propertyName
      * @param $className
-     * @return Type
+     * @return Field
      */
-    private function getEntityElasticType($className) {
-        $classMetadata = $this->query->getEntityManager()->getClassMetadata($className);
+    private function getEntityElasticField($propertyName, $className) {
+        /** @var Field[] $fields */
+        $fields = (new AnnotationEntityHydrator())->extractSpecAnnotations($className, Field::class);
 
-        $entityPersister = $this->query->getEntityManager()->getUnitOfWork()
-            ->getEntityPersister($className);
-        /** @var Type $type */
-        $type = $entityPersister->getAnnotionReader()
-            ->getClassAnnotation($classMetadata->getReflectionClass(), Type::class);
-
-        return $type;
+        return isset($fields[$propertyName]) ? $fields[$propertyName]: null;
     }
 }

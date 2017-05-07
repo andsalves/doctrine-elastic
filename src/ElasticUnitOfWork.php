@@ -6,7 +6,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnClearEventArgs;
 use Doctrine\ORM\Event\PreFlushEventArgs;
 use Doctrine\ORM\Events;
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\ORMInvalidArgumentException;
 use DoctrineElastic\Hydrate\SimpleEntityHydrator;
 use DoctrineElastic\Persister\ElasticEntityPersister;
@@ -49,8 +48,8 @@ class ElasticUnitOfWork {
     /* @var EntityManagerInterface $em */
     private $elastic;
 
-    /** @var ClassMetadataInfo[] */
-    private $commitOrder = [];
+    /** @var string[] */
+    private $entitiesCommitOrder = [];
 
     protected $entityDeletions;
     protected $entityInsertions;
@@ -69,9 +68,7 @@ class ElasticUnitOfWork {
      * @return ElasticEntityPersister
      */
     public function getEntityPersister($entityName) {
-        $class = $this->em->getClassMetadata($entityName);
-
-        return new ElasticEntityPersister($this->em, $class, $this->elastic);
+        return new ElasticEntityPersister($this->em, $entityName);
     }
 
     /**
@@ -96,7 +93,7 @@ class ElasticUnitOfWork {
                 break;
         }
 
-        $this->commitOrder[] = $this->em->getClassMetadata(get_class($entity));
+        $this->entitiesCommitOrder[] = get_class($entity);
     }
 
     /**
@@ -209,21 +206,21 @@ class ElasticUnitOfWork {
         }
 
         $this->dispatchOnFlushEvent();
-        $commitOrder = $this->getCommitOrder();
+        $commitOrder = $this->getEntitiesCommitOrder();
 
 //        $conn = $this->em->getConnection();
 //        $conn->beginTransaction();
 
         try {
             if ($this->entityInsertions) {
-                foreach ($commitOrder as $classMetadata) {
-                    $this->executeInserts($classMetadata);
+                foreach ($commitOrder as $className) {
+                    $this->executeInserts($className);
                 }
             }
 
             if ($this->entityUpdates) {
-                foreach ($commitOrder as $classMetadata) {
-                    $this->executeUpdates($classMetadata);
+                foreach ($commitOrder as $className) {
+                    $this->executeUpdates($className);
                 }
             }
 
@@ -244,11 +241,11 @@ class ElasticUnitOfWork {
         $this->clear($entity);
     }
 
-    public function executeInserts(ClassMetadataInfo $classMetadata) {
-        $persister = $this->getEntityPersister($classMetadata->name);
+    public function executeInserts($className) {
+        $persister = $this->getEntityPersister($className);
 
         foreach ($this->entityInsertions as $oid => $entity) {
-            if ($this->em->getClassMetadata(get_class($entity))->name !== $classMetadata->name) {
+            if (get_class($entity) !== $className) {
                 continue;
             }
 
@@ -259,11 +256,11 @@ class ElasticUnitOfWork {
         $persister->executeInserts();
     }
 
-    public function executeUpdates(ClassMetadataInfo $classMetadata) {
-        $persister = $this->getEntityPersister($classMetadata->name);
+    public function executeUpdates($className) {
+        $persister = $this->getEntityPersister($className);
 
         foreach ($this->entityUpdates as $oid => $entity) {
-            if ($this->em->getClassMetadata(get_class($entity))->name !== $classMetadata->name) {
+            if (get_class($entity) !== $className) {
                 continue;
             }
 
@@ -272,11 +269,11 @@ class ElasticUnitOfWork {
         }
     }
 
-    public function executeDeletions(ClassMetadataInfo $classMetadata) {
-        $persister = $this->getEntityPersister($classMetadata->name);
+    public function executeDeletions($className) {
+        $persister = $this->getEntityPersister($className);
 
         foreach ($this->entityDeletions as $oid => $entity) {
-            if ($this->em->getClassMetadata(get_class($entity))->name !== $classMetadata->name) {
+            if (get_class($entity) !== $className) {
                 continue;
             }
 
@@ -298,7 +295,7 @@ class ElasticUnitOfWork {
             $this->entityInsertions =
             $this->entityUpdates =
             $this->entityDeletions =
-            $this->commitOrder = [];
+            $this->entitiesCommitOrder = [];
         } else {
             $this->clearEntityInsertions($entity);
             $this->clearEntityUpdate($entity);
@@ -342,7 +339,7 @@ class ElasticUnitOfWork {
         }
 
         $this->scheduleForDelete($entity);
-        $this->commitOrder[] = $this->em->getClassMetadata(get_class($entity));
+        $this->entitiesCommitOrder[] = get_class($entity);
     }
 
     private function clearEntityDeletions($entity = null) {
@@ -358,10 +355,10 @@ class ElasticUnitOfWork {
     }
 
     /**
-     * @return ClassMetadataInfo[]
+     * @return string[]
      */
-    public function getCommitOrder() {
-        return $this->commitOrder;
+    public function getEntitiesCommitOrder() {
+        return $this->entitiesCommitOrder;
     }
 
     protected function afterTransactionRolledBack() {

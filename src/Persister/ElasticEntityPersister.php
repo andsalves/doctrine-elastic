@@ -4,7 +4,6 @@ namespace DoctrineElastic\Persister;
 
 use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\MappingException;
 use DoctrineElastic\ElasticEntityManager;
 use DoctrineElastic\Elastic\DoctrineElasticEvents;
@@ -14,6 +13,7 @@ use DoctrineElastic\Exception\ElasticConstraintException;
 use DoctrineElastic\Exception\ElasticOperationException;
 use DoctrineElastic\Exception\InvalidParamsException;
 use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
+use DoctrineElastic\Mapping\Constraint;
 use DoctrineElastic\Mapping\Field;
 use DoctrineElastic\Mapping\MetaField;
 use DoctrineElastic\Mapping\Type;
@@ -25,7 +25,7 @@ use DoctrineElastic\Query\ElasticQueryExecutor;
  *
  * @author Ands
  */
-class ElasticEntityPersister extends AbstractEntityPersister {
+class ElasticEntityPersister {
 
     /** @var array */
     protected $queuedInserts = [];
@@ -39,16 +39,32 @@ class ElasticEntityPersister extends AbstractEntityPersister {
     /** @var AnnotationEntityHydrator */
     private $hydrator;
 
-    public function __construct(ElasticEntityManager $em, ClassMetadata $classMetadata) {
-        parent::__construct($em, $classMetadata);
+    /** @var string */
+    private $className;
+
+    /** @var \ReflectionClass */
+    private $reflectionClass;
+
+    public function __construct(ElasticEntityManager $em, $className) {
+        $this->className = $className;
         $this->annotationReader = new AnnotationReader();
         $this->queryExecutor = new ElasticQueryExecutor($em);
         $this->hydrator = new AnnotationEntityHydrator();
-        $this->validateEntity($classMetadata->name);
+        $this->validateEntity();
+        $this->em = $em;
     }
 
-    private function validateEntity($className) {
-        $type = $this->annotationReader->getClassAnnotation($this->class->getReflectionClass(), Type::class);
+    public function getReflectionClass() {
+        if (is_null($this->reflectionClass)) {
+            $this->reflectionClass = new \ReflectionClass($this->className);
+        }
+
+        return $this->reflectionClass;
+    }
+
+    private function validateEntity() {
+        $type = $this->annotationReader->getClassAnnotation($this->getReflectionClass(), Type::class);
+        $className = $this->className;
 
         if (!($type instanceof Type)) {
             throw new AnnotationException(sprintf('%s annotation is missing for %s entity class',
@@ -70,15 +86,13 @@ class ElasticEntityPersister extends AbstractEntityPersister {
     }
 
     public function loadAll(array $criteria = [], array $orderBy = null, $limit = null, $offset = null) {
-        $classMetadata = $this->getClassMetadata();
-        $className = $classMetadata->getName();
         $type = $this->getEntityType();
         $sort = $must = [];
         $body = ['query' => ['bool' => ['must' => $must]]];
         /** @var Field $annotationProperty */
-        $fieldAnnotations = $this->hydrator->extractSpecAnnotations($className, Field::class);
+        $fieldAnnotations = $this->hydrator->extractSpecAnnotations($this->className, Field::class);
         /** @var MetaField[] $metaFieldAnnotations */
-        $metaFieldAnnotations = $this->hydrator->extractSpecAnnotations($className, MetaField::class);
+        $metaFieldAnnotations = $this->hydrator->extractSpecAnnotations($this->className, MetaField::class);
         $searchParams = new SearchParams();
 
         foreach ($criteria as $columnName => $value) {
@@ -91,7 +105,7 @@ class ElasticEntityPersister extends AbstractEntityPersister {
 
             if (is_null($annotation)) {
                 $msg = sprintf("field/metafield for column '%s' doesn't exist in %s entity class",
-                    $columnName, $classMetadata->getName());
+                    $columnName, $this->className);
                 throw new InvalidParamsException($msg);
             }
 
@@ -125,7 +139,7 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         $searchParams->setSort($sort);
         $searchParams->setFrom($offset);
 
-        return $this->queryExecutor->execute($searchParams, $classMetadata->name);
+        return $this->queryExecutor->execute($searchParams, $this->className);
     }
 
     public function getAnnotionReader() {
@@ -153,9 +167,9 @@ class ElasticEntityPersister extends AbstractEntityPersister {
                 $mergeParams['parent'] = $metaFieldsData['_parent'];
             }
 
-            $this->createTypeIfNotExists($type, $this->getClassMetadata()->name);
+            $this->createTypeIfNotExists($type, $this->className);
 
-            $this->checkIndentityConstraints($entityCopy);
+            $this->checkConstraints($entityCopy);
             $return = [];
 
             $inserted = $this->em->getConnection()->insert(
@@ -234,21 +248,51 @@ class ElasticEntityPersister extends AbstractEntityPersister {
     }
 
     /**
-     * Check Identity values for entity, if there are identity fields,
-     * check if already exists items with such value (unique constraint verification)
+     * Check contraints values for entity, if exists
      *
      * @param object $entity
      * @throws ElasticConstraintException
      */
-    private function checkIndentityConstraints($entity) {
-        $identities = $this->getClassMetadata()->getIdentifierValues($entity);
+    private function checkConstraints($entity) {
+        /** @var Constraint[] $constraintAnnotations */
+        $constraintAnnotations = $this->hydrator->extractSpecAnnotations($this->className, Constraint::class);
 
-        foreach ($identities as $property => $value) {
-            $element = $this->load([$property => $value]);
+        foreach ($constraintAnnotations as $property => $annotation) {
+            $value = $this->hydrator->extract($entity, $property);
 
-            if (boolval($element)) {
-                throw new ElasticConstraintException(sprintf("Unique/IDENTITY field %s already has "
-                    . "a document with value '%s'", $property, $value));
+            switch ($annotation->type) {
+                case Constraint::UNIQUE_VALUE:
+                    if (!is_null($value)) {
+                        $element = $this->load([$property => $value]);
+
+                        if (boolval($element)) {
+                            throw new ElasticConstraintException(sprintf(
+                                "Unique field %s already has a document with value '%s'", $property, $value
+                            ));
+                        }
+                    }
+
+                    break;
+                case Constraint::MATCH_LENGTH:
+                case Constraint::MAX_LENGTH:
+                case Constraint::MIN_LENGTH:
+                    if (isset($annotation->options['value'])) {
+                        $baseLength = intval($annotation->options['value']);
+
+                        if (is_array($value) || is_string($value)) {
+                            $length = is_array($value) ? count($value) : strlen($value);
+                            $operator = Constraint::$operators[$annotation->type];
+
+                            if (!eval(sprintf('%s %s %s', $length, $operator, $baseLength))) {
+                                throw new ElasticConstraintException(sprintf(
+                                    "Length for column %s must be %s %s. Current length: %s",
+                                    $property, $operator, $baseLength, $length
+                                ));
+                            }
+                        }
+                    }
+
+                    break;
             }
         }
     }
@@ -267,11 +311,11 @@ class ElasticEntityPersister extends AbstractEntityPersister {
      * @return Type
      * @throws MappingException
      */
-    private function getEntityType($className = null) {
-        if (is_string($className) && boolval($className)) {
+    public function getEntityType($className = null) {
+        if (boolval($className)) {
             $refClass = new \ReflectionClass($className);
         } else {
-            $refClass = $this->getClassMetadata()->getReflectionClass();
+            $refClass = $this->getReflectionClass();
         }
 
         $type = $this->annotationReader->getClassAnnotation($refClass, Type::class);
@@ -279,7 +323,7 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         if ($type instanceof Type) {
             return $type;
         } else {
-            throw new MappingException(sprintf('Unable to get Type Mapping of %s entity', $this->class->name));
+            throw new MappingException(sprintf('Unable to get Type Mapping of %s entity', $className));
         }
     }
 
