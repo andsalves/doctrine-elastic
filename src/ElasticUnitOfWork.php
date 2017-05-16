@@ -200,10 +200,11 @@ class ElasticUnitOfWork {
 
     /**
      * @param null|object|array $entity
+     * @param false|true $async
      * @return void
      * @throws \Exception
      */
-    public function commit($entity = null) {
+    public function commit($entity = null, $refresh) {
         if ($this->em->getEventManager()->hasListeners(Events::preFlush)) {
             $this->em->getEventManager()->dispatchEvent(Events::preFlush, new PreFlushEventArgs($this->em));
         }
@@ -217,13 +218,13 @@ class ElasticUnitOfWork {
         try {
             if ($this->entityInsertions) {
                 foreach ($commitOrder as $classMetadata) {
-                    $this->executeInserts($classMetadata);
+                    $this->executeInserts($classMetadata, $refresh);
                 }
             }
 
             if ($this->entityUpdates) {
                 foreach ($commitOrder as $classMetadata) {
-                    $this->executeUpdates($classMetadata);
+                    $this->executeUpdates($classMetadata, $refresh);
                 }
             }
 
@@ -244,7 +245,7 @@ class ElasticUnitOfWork {
         $this->clear($entity);
     }
 
-    public function executeInserts(ClassMetadataInfo $classMetadata) {
+    public function executeInserts(ClassMetadataInfo $classMetadata, $refresh) {
         $persister = $this->getEntityPersister($classMetadata->name);
 
         foreach ($this->entityInsertions as $oid => $entity) {
@@ -256,15 +257,23 @@ class ElasticUnitOfWork {
             unset($this->entityInsertions[$oid]);
         }
 
+        if ($refresh) {
+            $persister->enableRefresh();
+        }
+
         $persister->executeInserts();
     }
 
-    public function executeUpdates(ClassMetadataInfo $classMetadata) {
+    public function executeUpdates(ClassMetadataInfo $classMetadata, $async) {
         $persister = $this->getEntityPersister($classMetadata->name);
 
         foreach ($this->entityUpdates as $oid => $entity) {
             if ($this->em->getClassMetadata(get_class($entity))->name !== $classMetadata->name) {
                 continue;
+            }
+
+            if ($async) {
+                $persister->enableRefresh();
             }
 
             $persister->update($entity);
