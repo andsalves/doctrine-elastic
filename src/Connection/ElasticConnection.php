@@ -158,7 +158,7 @@ class ElasticConnection implements ElasticConnectionInterface {
 
         $params = array_merge_recursive($defaultParams, $mergeParams);
 
-        $return = $this->elastic->create($params);
+        $return = $this->elastic->index($params);
 
         if (isset($return['created'])) {
             return $return['created'];
