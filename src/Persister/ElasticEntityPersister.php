@@ -15,6 +15,7 @@ use DoctrineElastic\Exception\ElasticOperationException;
 use DoctrineElastic\Exception\InvalidParamsException;
 use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
 use DoctrineElastic\Mapping\Field;
+use DoctrineElastic\Mapping\Index;
 use DoctrineElastic\Mapping\MetaField;
 use DoctrineElastic\Mapping\Type;
 use DoctrineElastic\Query\ElasticQueryExecutor;
@@ -39,6 +40,8 @@ class ElasticEntityPersister extends AbstractEntityPersister {
     /** @var AnnotationEntityHydrator */
     private $hydrator;
 
+    private $refresh;
+
     public function __construct(ElasticEntityManager $em, ClassMetadata $classMetadata) {
         parent::__construct($em, $classMetadata);
         $this->annotationReader = new AnnotationReader();
@@ -47,16 +50,32 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         $this->validateEntity($classMetadata->name);
     }
 
+    public function enableRefresh()
+    {
+        $this->refresh = true;
+    }
+
+    public function disableRefresh()
+    {
+        $this->refresh = false;
+    }
+
     private function validateEntity($className) {
         $type = $this->annotationReader->getClassAnnotation($this->class->getReflectionClass(), Type::class);
+        /** @var Index $index */
+        $index = $this->annotationReader->getClassAnnotation($this->class->getReflectionClass(), Index::class);
 
         if (!($type instanceof Type)) {
             throw new AnnotationException(sprintf('%s annotation is missing for %s entity class',
                 Type::class, get_class()));
         }
 
+        if ($index && $index->getName()) {
+            $type->setIndex($index->getName());
+        }
+
         if (!$type->isValid()) {
-            $errorMessage = $type->getErrorMessage() . ' for %s entity class';
+            $errorMessage = reset($type->getErrorMessage()) . ' for %s entity class';
             throw new AnnotationException(sprintf($errorMessage, $className));
         }
 
@@ -135,6 +154,8 @@ class ElasticEntityPersister extends AbstractEntityPersister {
     public function executeInserts() {
         foreach ($this->queuedInserts as $entity) {
             $type = $this->getEntityType();
+            /** @var Index $index */
+            $index = $this->getEntityIndex();
             $entityCopy = clone $entity;
 
             $this->em->getEventManager()->dispatchEvent(
@@ -153,13 +174,20 @@ class ElasticEntityPersister extends AbstractEntityPersister {
                 $mergeParams['parent'] = $metaFieldsData['_parent'];
             }
 
-            $this->createTypeIfNotExists($type, $this->getClassMetadata()->name);
+            $mergeParams['refresh'] = $this->refresh ? "true" : "false";
+
+            if ($index) {
+                $this->createIndexIfNotExists($index, $this->getClassMetadata()->name);
+            }
+            $this->createTypeIfNotExists($type, $this->getClassMetadata()->name, $index);
+            $indexName = ($index && $index->getName()) ? $index->getName() : $type->getIndex();
+
 
             $this->checkIndentityConstraints($entityCopy);
             $return = [];
 
             $inserted = $this->em->getConnection()->insert(
-                $type->getIndex(), $type->getName(), $fieldsData, $mergeParams, $return
+                $indexName, $type->getName(), $fieldsData, $mergeParams, $return
             );
 
             if ($inserted) {
@@ -174,17 +202,29 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         }
     }
 
+    private function createIndexIfNotExists(Index $index, $className = null)
+    {
+        $indexName = $index->getName();
+
+        if (!$this->em->getConnection()->indexExists($indexName)) {
+            $indexSettings = $index->getArrayCopy()['settings'];
+
+            $this->em->getConnection()->createIndex($indexName, null, $indexSettings);
+        }
+    }
+
     /**
      * @param Type $type
      * @param string $className
+     * @param Index $index
      * @throws ElasticConstraintException
      */
-    private function createTypeIfNotExists(Type $type, $className) {
+    private function createTypeIfNotExists(Type $type, $className, Index $index = null) {
         foreach ($type->getChildClasses() as $childClass) {
             $this->createTypeIfNotExists($this->getEntityType($childClass), $childClass);
         }
 
-        $indexName = $type->getIndex();
+        $indexName = ($index && $index->getName()) ? $index->getName() : $type->getIndex();
         $typeName = $type->getName();
 
         if (!$this->em->getConnection()->typeExists($indexName, $typeName)) {
@@ -274,13 +314,37 @@ class ElasticEntityPersister extends AbstractEntityPersister {
             $refClass = $this->getClassMetadata()->getReflectionClass();
         }
 
+        /** @var Type $type */
         $type = $this->annotationReader->getClassAnnotation($refClass, Type::class);
+        /** @var Index $index */
+        $index = $this->annotationReader->getClassAnnotation($refClass, Index::class);
+
+        if ($index && $index->getName()) {
+            $type->setIndex($index->getName());
+        }
 
         if ($type instanceof Type) {
             return $type;
         } else {
             throw new MappingException(sprintf('Unable to get Type Mapping of %s entity', $this->class->name));
         }
+    }
+
+    private function getEntityIndex($className = null)
+    {
+        if (is_string($className) && boolval($className)) {
+            $refClass = new \ReflectionClass($className);
+        } else {
+            $refClass = $this->getClassMetadata()->getReflectionClass();
+        }
+
+        $index = $this->annotationReader->getClassAnnotation($refClass, Index::class);
+
+        if ($index instanceof Index) {
+            return $index;
+        }
+
+        return null;
     }
 
     private function hydrateEntityByResult($entity, array $searchResult) {
@@ -301,8 +365,10 @@ class ElasticEntityPersister extends AbstractEntityPersister {
         $_id = $this->hydrator->extract($entity, '_id');
         $return = [];
 
+        $mergeParams = $this->refresh ? ["refresh" => "true"] : ["refresh" => "false"];
+
         $updated = $this->em->getConnection()->update(
-            $type->getIndex(), $type->getName(), $_id, $dataUpdate, [], $return
+            $type->getIndex(), $type->getName(), $_id, $dataUpdate, $mergeParams, $return
         );
 
         if ($updated) {

@@ -256,8 +256,8 @@ class ElasticEntityManager implements EntityManagerInterface {
         // TODO: Implement refresh() method.
     }
 
-    public function flush($entity = null) {
-        $this->getUnitOfWork()->commit($entity);
+    public function flush($entity = null, $refresh = true) {
+        $this->getUnitOfWork()->commit($entity, $refresh);
     }
 
     public function getMetadataFactory() {
