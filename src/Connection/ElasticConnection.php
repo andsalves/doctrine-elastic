@@ -301,9 +301,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             'index' => $index,
             'type' => $type,
             '_source' => true,
-            'query_cache' => false,
             'request_cache' => false,
-            'default_operator' => 'AND',
             'size' => self::DEFAULT_MAX_RESULTS,
             'body' => $body
         );
