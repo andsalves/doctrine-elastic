@@ -4,7 +4,6 @@ namespace DoctrineElastic\Tests;
 
 use Doctrine\Common\EventManager;
 use Doctrine\ORM\Configuration;
-use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr;
 use DoctrineElastic\Connection\ElasticConnection;
 use DoctrineElastic\Elastic\ElasticQuery;
@@ -12,6 +11,7 @@ use DoctrineElastic\Elastic\ElasticQueryBuilder;
 use DoctrineElastic\ElasticEntityManager;
 use DoctrineElastic\ElasticUnitOfWork;
 use DoctrineElastic\Entity\FooType;
+use DoctrineElastic\Repository\ElasticEntityRepository;
 
 /**
  * Test class for ElasticEntityManager
@@ -54,8 +54,8 @@ class ElasticEntityManagerTest extends BaseTestCaseTest {
 
     /** @depends testClientConnect */
     public function testGetRepository() {
-        $this->assertInstanceOf(EntityRepository::class, $this->_getEntityManager()->getRepository(FooType::class),
-            sprintf("ElasticEntityManager::getRepository failed to return a %s instance", EntityRepository::class));
+        $this->assertInstanceOf(ElasticEntityRepository::class, $this->_getEntityManager()->getRepository(FooType::class),
+            sprintf("ElasticEntityManager::getRepository failed to return a %s instance", ElasticEntityRepository::class));
     }
 
     /** @depends testClientConnect */
@@ -80,12 +80,6 @@ class ElasticEntityManagerTest extends BaseTestCaseTest {
     public function testGetEventManager() {
         $this->assertInstanceOf(EventManager::class, $this->_getEntityManager()->getEventManager(),
             sprintf("ElasticEntityManager::getEventManager failed to return a %s instance", EventManager::class));
-    }
-
-    /** @depends testClientConnect */
-    public function testGetConfiguration() {
-        $this->assertInstanceOf(Configuration::class, $this->_getEntityManager()->getConfiguration(),
-            sprintf("ElasticEntityManager::getConfiguration failed to return a %s instance", Configuration::class));
     }
 
     /** @depends testClientConnect */

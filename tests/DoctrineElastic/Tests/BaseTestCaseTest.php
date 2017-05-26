@@ -2,13 +2,8 @@
 
 namespace DoctrineElastic\Tests;
 
-use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
-use Doctrine\Common\EventManager;
-use Doctrine\Common\Persistence\Mapping\Driver\MappingDriverChain;
-use Doctrine\ORM\Configuration;
 use DoctrineElastic\ElasticEntityManager;
-use DoctrineElastic\Mapping\Driver\ElasticAnnotationDriver;
 use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\TransportException;
 
@@ -45,7 +40,7 @@ abstract class BaseTestCaseTest extends \PHPUnit_Framework_TestCase {
 
             $elastic = $this->_getElasticClient();
 
-            self::$_elasticEntityManager = new ElasticEntityManager($elastic, new EventManager());
+            self::$_elasticEntityManager = new ElasticEntityManager($elastic);
         }
 
         return self::$_elasticEntityManager;

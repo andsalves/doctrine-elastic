@@ -17,7 +17,7 @@ class ElasticRepositoryManager {
 
         if (!isset($this->repositoryList[$hashKey])) {
             $repository = new ElasticEntityRepository($entityManager, $className);
-            $repositoryList[$hashKey] = $repository;
+            $this->repositoryList[$hashKey] = $repository;
         }
 
         return $this->repositoryList[$hashKey];
