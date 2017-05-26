@@ -40,24 +40,12 @@ abstract class BaseTestCaseTest extends \PHPUnit_Framework_TestCase {
      */
     protected function _getEntityManager() {
         if (!self::$_elasticEntityManager instanceof ElasticEntityManager) {
-            $ormConfig = new Configuration();
-            $driverChain = new MappingDriverChain();
-            $annotationDriver = new ElasticAnnotationDriver(new AnnotationReader(), []);
-
             AnnotationRegistry::registerFile(getcwd() . '/vendor/doctrine/orm/lib/Doctrine/ORM/Mapping/Driver/DoctrineAnnotations.php');
             AnnotationRegistry::registerFile(getcwd() . '/src/Mapping/Driver/ElasticAnnotations.php');
 
-            $driverChain->addDriver($annotationDriver, 'DoctrineElastic\Entity');
-
-            $ormConfig->setMetadataDriverImpl($driverChain);
-            $ormConfig->setProxyDir('data');
-            $ormConfig->setProxyNamespace('DoctrineORMModule\Proxy');
-            $ormConfig->setAutoGenerateProxyClasses(true);
-            $ormConfig->setEntityNamespaces(['DoctrineElastic\Entity']);
-
             $elastic = $this->_getElasticClient();
 
-            self::$_elasticEntityManager = new ElasticEntityManager($ormConfig, $elastic, new EventManager());
+            self::$_elasticEntityManager = new ElasticEntityManager($elastic, new EventManager());
         }
 
         return self::$_elasticEntityManager;
