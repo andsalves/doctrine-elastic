@@ -150,7 +150,7 @@ class ElasticConnection implements ElasticConnectionInterface {
         $defaultParams = array(
             'index' => $index,
             'type' => $type,
-            'op_type' => 'create',
+            'op_type' => 'index',
             'timestamp' => time(),
             'refresh' => "true",
             'body' => $body
