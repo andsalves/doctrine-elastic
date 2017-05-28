@@ -2,12 +2,8 @@
 
 namespace DoctrineElastic\Query;
 
-use Doctrine\ORM\Query\AST\FromClause;
-use Doctrine\ORM\Query\AST\GroupByClause;
-use Doctrine\ORM\Query\AST\HavingClause;
 use Doctrine\ORM\Query\AST\OrderByClause;
 use Doctrine\ORM\Query\AST\OrderByItem;
-use Doctrine\ORM\Query\AST\SelectClause;
 use Doctrine\ORM\Query\AST\SelectStatement;
 use Doctrine\ORM\Query\AST\WhereClause;
 use DoctrineElastic\Elastic\ElasticQuery;
@@ -57,19 +53,8 @@ class ElasticWalker {
         $searchParams->setType($type->getName());
         $searchParams->setIndex($type->getIndex());
 
-        $this->walkSelectClause($this->_ast->selectClause, $searchParams);
-        $this->walkFromClause($this->_ast->fromClause, $searchParams);
-
         if ($this->_ast->whereClause) {
             $this->walkWhereClause($this->_ast->whereClause, $searchParams);
-        }
-
-        if ($this->_ast->groupByClause) {
-            $this->walkGroupByClause($this->_ast->groupByClause, $searchParams);
-        }
-
-        if ($this->_ast->havingClause) {
-            $this->walkHavingClause($this->_ast->havingClause, $searchParams);
         }
 
         if ($this->_ast->orderByClause) {
@@ -82,25 +67,9 @@ class ElasticWalker {
         return $searchParams;
     }
 
-    private function walkSelectClause(SelectClause $selectClause, SearchParams $searchParams) {
-
-    }
-
-    private function walkFromClause(FromClause $fromClause, SearchParams $searchParams) {
-
-    }
-
     private function walkWhereClause(WhereClause $whereClause, SearchParams $searchParams) {
         $whereWalker = new WhereWalker($this->query, $this->_className, $this->walkerHelper);
         $whereWalker->walk($whereClause, $searchParams);
-    }
-
-    private function walkGroupByClause(GroupByClause $groupByClause, SearchParams $searchParams) {
-
-    }
-
-    private function walkHavingClause(HavingClause $havingClause, SearchParams $searchParams) {
-
     }
 
     private function walkOrderByClause(OrderByClause $orderByClause, SearchParams $searchParams) {

@@ -8,7 +8,7 @@ use DoctrineElastic\ElasticEntityManager;
 /**
  * EventArgs relative to Query operations in DoctrineElastic events
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class QueryEventArgs extends EventArgs {
 

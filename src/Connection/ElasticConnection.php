@@ -2,24 +2,40 @@
 
 namespace DoctrineElastic\Connection;
 
-use Elasticsearch\Client;
+use DoctrineElastic\Exception\ConnectionException;
+use DoctrineElastic\Exception\ElasticOperationException;
+use DoctrineElastic\Helper\MappingHelper;
+use DoctrineElastic\Http\CurlRequest;
+use DoctrineElastic\Traiting\ErrorGetterTrait;
 
 /**
  * Default elastic connection class for general operations
  * Notice that the original elastic result of most of operations can be get by $return param
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class ElasticConnection implements ElasticConnectionInterface {
+
+    use ErrorGetterTrait;
 
     /** Override default elastic limit size query */
     const DEFAULT_MAX_RESULTS = 10000;
 
-    /** @var Client */
-    protected $elastic;
+    /** @var CurlRequest */
+    protected $curlRequest;
 
-    public function __construct(Client $elastic) {
-        $this->elastic = $elastic;
+    /** @var float */
+    protected $esVersion;
+
+    public function __construct(array $hosts) {
+        $this->curlRequest = new CurlRequest();
+        $baseHost = reset($hosts);
+
+        if (empty($baseHost) || !is_string($baseHost) || !preg_match('/http/', $baseHost)) {
+            throw new ConnectionException("Elasticsearch host is invalid. ");
+        }
+
+        $this->curlRequest->setBaseUrl($baseHost);
     }
 
     /**
@@ -37,42 +53,28 @@ class ElasticConnection implements ElasticConnectionInterface {
             throw new \InvalidArgumentException(sprintf("'%s' index already exists", $index));
         }
 
-        $params = array(
-            'index' => $index,
-            'update_all_types' => true,
-            'body' => []
-        );
+        $params = [];
 
         if (boolval($mappings)) {
-            foreach ($mappings as $typeName => $mapping) {
-                $properties = $mapping['properties'];
-
-                foreach ($properties as $fieldName => $fieldMap) {
-                    if (isset($fieldMap['type']) && in_array($fieldMap['type'], ['string', 'text', 'keyword'])) {
-                        continue;
-                    }
-
-                    if (isset($mappings[$typeName]['properties'][$fieldName]['index'])) {
-                        unset($mappings[$typeName]['properties'][$fieldName]['index']);
-                    }
-
-                    if (isset($mappings[$typeName]['properties'][$fieldName]['boost'])) {
-                        unset($mappings[$typeName]['properties'][$fieldName]['boost']);
-                    }
-                }
-            }
-            $params['body']['mappings'] = $mappings;
+            $params['mappings'] = MappingHelper::patchMappings($mappings, floor($this->getElasticsearchVersion()));
         }
 
         if (boolval($settings)) {
-            $params['body']['settings'] = $settings;
+            $params['settings'] = $settings;
         }
 
-        $return = $this->elastic->indices()->create($params);
+        if (boolval($aliases)) {
+            $params['aliases'] = $aliases;
+        }
 
-        if (isset($return['acknowledged'])) {
+        $response = $this->curlRequest->request($index, $params, 'PUT');
+        $return = $response['content'];
+
+        if (isset($return['acknowledged']) && $return['acknowledged']) {
             return $return['acknowledged'];
         }
+
+        $this->setErrorFromElasticReturn($return);
 
         return false;
     }
@@ -81,19 +83,25 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @param string $index
      * @param array|null $return
      * @return bool
+     * @throws ElasticOperationException
      */
     public function deleteIndex($index, array &$return = null) {
-        if (!$this->indexExists($index)) {
-            throw new \InvalidArgumentException(sprintf("'%s' index does not exists", $index));
-        }
-
         if (is_string($index) && !strstr('_all', $index) && !strstr('*', $index)) {
-            $return = $this->elastic->indices()->delete(['index' => $index]);
+            $response = $this->curlRequest->request($index, [], 'DELETE');
+            $return = $response['content'];
+
+            if ($response['status'] == 404) {
+                throw new ElasticOperationException("Index '$index' doesn't exist so cannot be deleted. ");
+            }
 
             if (isset($return['acknowledged'])) {
                 return $return['acknowledged'];
             }
+        } else {
+            throw new ElasticOperationException('Index name is invalid for deletion. ');
         }
+
+        $this->setErrorFromElasticReturn($return);
 
         return false;
     }
@@ -104,6 +112,7 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @param array $mappings
      * @param array|null $return
      * @return bool
+     * @throws ElasticOperationException
      */
     public function createType($index, $type, array $mappings = [], array &$return = null) {
         if (!$this->indexExists($index)) {
@@ -114,16 +123,19 @@ class ElasticConnection implements ElasticConnectionInterface {
             throw new \InvalidArgumentException(sprintf("Type 's%' already exists on index %s", $type, $index));
         }
 
-        $return = $this->elastic->indices()->putMapping(array(
-            'index' => $index,
-            'type' => $type,
-            'update_all_types' => true,
-            'body' => $mappings
-        ));
+        $mappings = MappingHelper::patchMappings($mappings, floor($this->getElasticsearchVersion()));
+
+        $response = $this->curlRequest->request("$index/_mapping/$type", $mappings, 'PUT');
+
+        $this->throwExceptionFromResponse($response, "Error creating type '$type' in '$index' index");
+
+        $return = $response['content'];
 
         if (isset($return['acknowledged'])) {
             return $return['acknowledged'];
         }
+
+        $this->setErrorFromElasticReturn($return);
 
         return false;
     }
@@ -147,22 +159,26 @@ class ElasticConnection implements ElasticConnectionInterface {
             return false;
         }
 
-        $defaultParams = array(
-            'index' => $index,
-            'type' => $type,
-            'op_type' => 'create',
-            'timestamp' => time(),
-            'refresh' => "true",
-            'body' => $body
-        );
+        $url = "$index/$type";
+        if (isset($body['_id'])) {
+            $url .= '/' . $body['_id'];
+            unset($body['_id']);
+        }
 
-        $params = array_merge_recursive($defaultParams, $mergeParams);
+        if (!empty($mergeParams)) {
+            $url = "$url?" . http_build_query($mergeParams);
+        }
 
-        $return = $this->elastic->index($params);
+        $response = $this->curlRequest->request($url, $body, 'POST');
+
+        $this->throwExceptionFromResponse($response);
+        $return = $response['content'];
 
         if (isset($return['created'])) {
             return $return['created'];
         }
+
+        $this->setErrorFromElasticReturn($return);
 
         return false;
     }
@@ -182,24 +198,22 @@ class ElasticConnection implements ElasticConnectionInterface {
             return false;
         }
 
-        $defaultParams = array(
-            'id' => $_id,
-            'index' => $index,
-            'type' => $type,
-            'refresh' => "true",
-            'retry_on_conflict' => 4,
-            'body' => array(
-                'doc' => $body
-            )
-        );
+        if (array_key_exists('doc', $body)) {
+            $params = $body;
+        } else {
+            $params = ['doc' => $body];
+        }
 
-        $params = array_merge_recursive($defaultParams, $mergeParams);
+        $response = $this->curlRequest->request("$index/$type/$_id/_update", $params, 'POST');
+        $this->throwExceptionFromResponse($response);
 
-        $return = $this->elastic->update($params);
+        $return = $response['content'];
 
         if (isset($return['_id'])) {
             return true;
         }
+
+        $this->setErrorFromElasticReturn($return);
 
         return false;
     }
@@ -217,20 +231,19 @@ class ElasticConnection implements ElasticConnectionInterface {
             return false;
         }
 
-        $defaultParams = array(
-            'id' => $_id,
-            'index' => $index,
-            'type' => $type,
-            'refresh' => "true"
-        );
+        $response = $this->curlRequest->request("$index/$type/$_id", [], 'DELETE');
+        $this->throwExceptionFromResponse($response);
+        $return = $response['content'];
 
-        $params = array_merge_recursive($defaultParams, $mergeParams);
-
-        $return = $this->elastic->delete($params);
-
-        if (isset($return['found']) && isset($return['_shards']['successful'])) {
-            return boolval($return['_shards']['successful']);
+        if (isset($return['found']) && !$return['found']) {
+            error_log("Doc with _id '$_id' was not found for delete. Index: '$index', Type: '$type' ");
         }
+
+        if (isset($return['_id'])) {
+            return true;
+        }
+
+        $this->setErrorFromElasticReturn($return);
 
         return false;
     }
@@ -257,26 +270,15 @@ class ElasticConnection implements ElasticConnectionInterface {
             return null;
         }
 
-        $defaultParams = array(
-            'id' => $_id,
-            'index' => $index,
-            'type' => $type,
-            'refresh' => "true",
-            '_source' => true,
-            '_source_exclude' => []
-        );
+        $response = $this->curlRequest->request("$index/$type/$_id", [], 'GET');
+        $return = $response['content'];
 
-        $params = array_merge_recursive($defaultParams, $mergeParams);
-        $existsParams = array_filter($params, function ($key) {
-            return in_array($key, ['id', 'index', 'type', 'refresh']);
-        }, ARRAY_FILTER_USE_KEY);
+        if ($response['status'] == 404) {
+            return null;
+        }
 
-        if ($this->elastic->exists($existsParams)) {
-            $return = $this->elastic->get($params);
-
-            if (isset($return['found']) && $return['found']) {
-                return $return;
-            }
+        if (isset($return['found']) && boolval($return['found'])) {
+            return $return;
         }
 
         return null;
@@ -297,24 +299,15 @@ class ElasticConnection implements ElasticConnectionInterface {
             return [];
         }
 
-        $defaultParams = array(
-            'index' => $index,
-            'type' => $type,
-            '_source' => true,
-            'request_cache' => false,
-            'size' => self::DEFAULT_MAX_RESULTS,
-            'body' => $body
-        );
+        $this->unsetEmpties($body);
 
-        $params = array_replace_recursive($defaultParams, $mergeParams);
-
-        $this->unsetEmpties($params['body']);
-
-        if (empty($params['body'])) {
-            unset($params['body']);
+        if (isset($body['query']) && empty($body['query'])) {
+            unset($body['query']);
         }
 
-        $return = $this->elastic->search($params);
+        $response = $this->curlRequest->request("$index/$type/_search", $body, 'POST');
+        $this->throwExceptionFromResponse($response);
+        $return = $response['content'];
 
         if (isset($return['hits']['hits'])) {
             return $return['hits']['hits'];
@@ -344,7 +337,9 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @return bool
      */
     public function indexExists($index) {
-        return $this->elastic->indices()->exists(['index' => $index]);
+        $response = $this->curlRequest->request($index, [], 'HEAD');
+
+        return $response['status'] === 200;
     }
 
     /**
@@ -353,19 +348,46 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @return bool
      */
     public function typeExists($index, $type) {
-        $return = $this->elastic->indices()->existsType(array(
-            'index' => $index,
-            'type' => $type,
-            'ignore_unavailable' => true
-        ));
+        $response = $this->curlRequest->request("$index/$type", [], 'HEAD');
 
-        return boolval($return);
+        return $response['status'] === 200;
     }
 
-    /**
-     * @return Client
-     */
-    public function getElasticClient() {
-        return $this->elastic;
+    private function throwExceptionFromResponse($response, $appendPrefix = '') {
+        if (isset($response['content']['error']['reason'])) {
+            if (!empty($appendPrefix)) {
+                $appendPrefix .= ': ';
+            }
+
+            throw new ElasticOperationException($appendPrefix . $response['content']['error']['reason']);
+        }
+    }
+
+    public function hasConnection() {
+        $response = $this->curlRequest->request('', [], 'HEAD');
+
+        return $response['status'] == 200;
+    }
+
+    private function setErrorFromElasticReturn($return) {
+        if (isset($return['error']['root_cause'][0]['reason'])) {
+            $this->setError($return['error']['root_cause'][0]['reason']);
+        } else if (isset($return['error']['reason'])) {
+            $this->setError($return['error']['reason']);
+        }
+    }
+
+    public function getElasticsearchVersion() {
+        if (is_null($this->esVersion)) {
+            $response = $this->curlRequest->request('', [], 'GET');
+
+            if (isset($response['content']['version']['number'])) {
+                $this->esVersion = floatval($response['content']['version']['number']);
+            } else {
+                throw new ConnectionException('Unable to fetch elasticsearch version. ');
+            }
+        }
+
+        return $this->esVersion;
     }
 }

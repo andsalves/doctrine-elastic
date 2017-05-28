@@ -2,14 +2,12 @@
 
 namespace DoctrineElastic;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnClearEventArgs;
 use Doctrine\ORM\Event\PreFlushEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMInvalidArgumentException;
 use DoctrineElastic\Hydrate\SimpleEntityHydrator;
 use DoctrineElastic\Persister\ElasticEntityPersister;
-use Elasticsearch\Client;
 use InvalidArgumentException;
 
 /**
@@ -17,7 +15,7 @@ use InvalidArgumentException;
  * There is many simplifications, just like entity states, persist, remove, delete, commit actions,
  * and much more.
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class ElasticUnitOfWork {
 
@@ -42,24 +40,25 @@ class ElasticUnitOfWork {
      */
     const STATE_DELETED = 4;
 
-    /* @var ElasticEntityManager $em */
+    /* @var ElasticEntityManager */
     private $em;
-
-    /* @var EntityManagerInterface $em */
-    private $elastic;
 
     /** @var string[] */
     private $entitiesCommitOrder = [];
 
-    protected $entityDeletions;
-    protected $entityInsertions;
-    protected $entityUpdates;
+    /** @var array */
+    protected $entityDeletions = [];
+
+    /** @var array */
+    protected $entityInsertions = [];
+
+    /** @var array */
+    protected $entityUpdates = [];
 
     private $hydrator;
 
-    public function __construct(EntityManagerInterface $em, Client $elastic) {
+    public function __construct(ElasticEntityManager $em) {
         $this->em = $em;
-        $this->elastic = $elastic;
         $this->hydrator = new SimpleEntityHydrator();
     }
 
@@ -208,29 +207,25 @@ class ElasticUnitOfWork {
         $this->dispatchOnFlushEvent();
         $commitOrder = $this->getEntitiesCommitOrder();
 
-//        $conn = $this->em->getConnection();
-//        $conn->beginTransaction();
-
         try {
-            if ($this->entityInsertions) {
+            if (!empty($this->entityInsertions)) {
                 foreach ($commitOrder as $className) {
                     $this->executeInserts($className);
                 }
             }
 
-            if ($this->entityUpdates) {
+            if (!empty($this->entityUpdates)) {
                 foreach ($commitOrder as $className) {
                     $this->executeUpdates($className);
                 }
             }
 
-            if ($this->entityDeletions) {
+            if (!empty($this->entityDeletions)) {
                 for ($count = count($commitOrder), $i = $count - 1; $i >= 0 && $this->entityDeletions; --$i) {
                     $this->executeDeletions($commitOrder[$i]);
                 }
             }
 
-//            $conn->commit();
         } catch (\Exception $e) {
             $this->afterTransactionRolledBack();
             throw $e;

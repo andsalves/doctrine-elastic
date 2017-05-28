@@ -3,9 +3,8 @@
 namespace DoctrineElastic\Tests;
 
 use Doctrine\Common\Annotations\AnnotationRegistry;
+use DoctrineElastic\Connection\ElasticConnection;
 use DoctrineElastic\ElasticEntityManager;
-use Elasticsearch\ClientBuilder;
-use Elasticsearch\Common\Exceptions\TransportException;
 
 /**
  * Base class for PhpUnit test classes
@@ -14,6 +13,8 @@ use Elasticsearch\Common\Exceptions\TransportException;
  */
 abstract class BaseTestCaseTest extends \PHPUnit_Framework_TestCase {
 
+    private static $esVersionPrinted = false;
+
     /** @var ElasticEntityManager */
     protected static $_elasticEntityManager;
 
@@ -21,7 +22,14 @@ abstract class BaseTestCaseTest extends \PHPUnit_Framework_TestCase {
         parent::__construct($name, $data, $dataName);
         self::$_elasticEntityManager = $this->_getEntityManager();
 
-        $this->hasElasticConnection();
+        if (!self::$esVersionPrinted) {
+            print sprintf(
+                "\nElasticsearch version set up to %s\n",
+                self::$_elasticEntityManager->getConnection()->getElasticsearchVersion()
+            );
+
+            self::$esVersionPrinted = true;
+        }
     }
 
     public function testClientConnect() {
@@ -30,60 +38,34 @@ abstract class BaseTestCaseTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * Creates default local Entity Manager for DoctrineElastic
-     *
      * @return ElasticEntityManager
+     * @throws \Exception
      */
     protected function _getEntityManager() {
         if (!self::$_elasticEntityManager instanceof ElasticEntityManager) {
             AnnotationRegistry::registerFile(getcwd() . '/vendor/doctrine/orm/lib/Doctrine/ORM/Mapping/Driver/DoctrineAnnotations.php');
             AnnotationRegistry::registerFile(getcwd() . '/src/Mapping/Driver/ElasticAnnotations.php');
 
-            $elastic = $this->_getElasticClient();
+            $esRootVersion = strval(getenv('ELASTICSEARCH_ROOT_VERSION'));
 
-            self::$_elasticEntityManager = new ElasticEntityManager($elastic);
+            $hosts = array(
+                getenv("ELASTICSEARCH{$esRootVersion}_TESTS_HTTP"),
+                getenv("ELASTICSEARCH{$esRootVersion}_TESTS_HTTPS")
+            );
+
+            if (is_null($hosts[0])) {
+                throw new \Exception('Unable to get environment vars for elasticsearch tests. ');
+            }
+
+            $conn = new ElasticConnection($hosts);
+
+            self::$_elasticEntityManager = new ElasticEntityManager($conn);
         }
 
         return self::$_elasticEntityManager;
     }
 
-    /**
-     * Creates default local elastic Client
-     *
-     * @return \Elasticsearch\Client
-     */
-    protected function _getElasticClient() {
-        if (self::$_elasticEntityManager instanceof ElasticEntityManager) {
-            return self::$_elasticEntityManager->getConnection()->getElasticClient();
-        }
-
-        $hosts = array(
-            0 => 'http://213.32.71.136:9200',
-            1 => 'http://213.32.71.136:9200',
-        );
-
-        $logger = ClientBuilder::defaultLogger('data/tests/logs/log.txt');
-
-        $client = ClientBuilder::create()
-            ->setHosts($hosts)
-            ->setRetries(0)
-            ->setHandler(ClientBuilder::singleHandler())
-            ->setLogger($logger)
-            ->build();
-
-        return $client;
-    }
-
     protected function hasElasticConnection() {
-        try {
-            $this->_getElasticClient()->cat()->indices();
-
-            return true;
-        } catch (TransportException $ex) {
-            $this->assertTrue(false, 'Could not connect to elasticsearch: ' . $ex->getMessage());
-        } catch (\Exception $ex) {
-            $this->assertTrue(false, 'Could not test to get elasticsearch indices: ' . $ex->getMessage());
-        }
-
-        return false;
+        return $this->_getEntityManager()->getConnection()->hasConnection();
     }
 }

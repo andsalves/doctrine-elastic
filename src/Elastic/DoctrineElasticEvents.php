@@ -23,7 +23,7 @@ namespace DoctrineElastic\Elastic;
  *
  * Container for all ORM events of DoctrineElastic that aren't in Events class of Doctrine
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 final class DoctrineElasticEvents {
 

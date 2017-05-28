@@ -8,7 +8,7 @@ use DoctrineElastic\Query\Walker\OperatorsMap;
 /**
  * Helper for this extension query walkers
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class WalkerHelper {
 

@@ -8,7 +8,7 @@ use DoctrineElastic\Mapping as ElasticORM;
 /**
  * Elastic type representation, like a relational table managed by Doctrine
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  *
  * @ElasticORM\Type(name="foo_type", index="foo_index")
  * @ORM\Entity

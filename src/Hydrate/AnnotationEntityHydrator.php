@@ -10,7 +10,7 @@ use DoctrineElastic\Mapping\Field;
  * Hydrator expert at extracting annotation fields from Entities
  * Uses AnnotationReader from Doctrine
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class AnnotationEntityHydrator extends SimpleEntityHydrator {
 

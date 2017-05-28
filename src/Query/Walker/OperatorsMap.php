@@ -6,7 +6,7 @@ namespace DoctrineElastic\Query\Walker;
  * Auxiliary for main operations
  * Contains map for operatoins
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class OperatorsMap {
 

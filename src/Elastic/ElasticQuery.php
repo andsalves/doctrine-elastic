@@ -9,7 +9,7 @@ use DoctrineElastic\Query\ElasticQueryExecutor;
 /**
  * DoctrineElastic Query representation
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class ElasticQuery {
 

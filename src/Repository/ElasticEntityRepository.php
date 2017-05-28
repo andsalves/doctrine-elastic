@@ -7,7 +7,7 @@ use DoctrineElastic\Elastic\ElasticQueryBuilder;
 use DoctrineElastic\ElasticEntityManager;
 
 /**
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class ElasticEntityRepository implements ObjectRepository {
 
@@ -74,7 +74,7 @@ class ElasticEntityRepository implements ObjectRepository {
     public function findOneBy(array $criteria, array $orderBy = null) {
         $persister = $this->_em->getUnitOfWork()->getEntityPersister($this->_entityName);
 
-        return $persister->load($criteria, null, null, array(), null, 1, $orderBy);
+        return $persister->load($criteria, 1, $orderBy);
     }
 
     /**

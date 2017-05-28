@@ -12,7 +12,7 @@ use DoctrineElastic\Helper\IndexHelper;
  * as long as you call Type::setDefaultName and/or Type::setDefaultIndex
  * before your query
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  *
  * @Annotation
  * @Target("CLASS")

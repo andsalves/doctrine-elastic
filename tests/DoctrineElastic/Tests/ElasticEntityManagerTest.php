@@ -3,7 +3,6 @@
 namespace DoctrineElastic\Tests;
 
 use Doctrine\Common\EventManager;
-use Doctrine\ORM\Configuration;
 use Doctrine\ORM\Query\Expr;
 use DoctrineElastic\Connection\ElasticConnection;
 use DoctrineElastic\Elastic\ElasticQuery;
@@ -144,10 +143,6 @@ class ElasticEntityManagerTest extends BaseTestCaseTest {
 
         $this->assertInstanceOf(ElasticQueryBuilder::class, $queryBuilder,
             sprintf("ElasticEntityManager::createQueryBuilder failed to return a % instance", ElasticQueryBuilder::class));
-
-        if (boolval($queryBuilder)) {
-
-        }
     }
 
     /** @depends testInsertion */

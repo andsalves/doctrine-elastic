@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping\Annotation;
  * Represents a metafield in elasticsearch.
  * Exemple: _id (required)
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  *
  * @Annotation
  * @Target({"PROPERTY","ANNOTATION"})

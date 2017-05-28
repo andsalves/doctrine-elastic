@@ -14,7 +14,7 @@ use Doctrine\ORM\Query\AST;
  * Elastic Query parser
  * Prepares query for execution
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class QueryParser {
 

@@ -29,7 +29,7 @@ use DoctrineElastic\Query\Walker\Helper\WalkerHelper;
 /**
  * Walker specialist for Where Clause of Query(builder)
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class WhereWalker {
 

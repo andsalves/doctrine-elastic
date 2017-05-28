@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping\Annotation;
  * These attributes represents elastic mapping for field, except $name
  * Creation of type mappings will be based in this annotation for each field/column
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  *
  * @Annotation
  * @Target({"PROPERTY","ANNOTATION"})

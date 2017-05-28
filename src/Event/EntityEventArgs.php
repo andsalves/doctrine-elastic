@@ -7,7 +7,7 @@ use Doctrine\Common\EventArgs;
 /**
  * EventArgs relative to Entity operations in DoctrineElastic events
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class EntityEventArgs extends EventArgs {
 

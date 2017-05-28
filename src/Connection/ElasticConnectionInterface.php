@@ -2,12 +2,9 @@
 
 namespace DoctrineElastic\Connection;
 
-use Elasticsearch\Client;
-
 /**
  * Interface for elastic connection implementation
- *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 interface ElasticConnectionInterface {
 
@@ -107,7 +104,7 @@ interface ElasticConnectionInterface {
     public function get($index, $type, $_id, array $mergeParams = [], array &$return = null);
 
     /**
-     * @return Client
+     * @return bool
      */
-    public function getElasticClient();
+    public function hasConnection();
 }

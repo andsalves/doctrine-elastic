@@ -12,7 +12,7 @@ use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
 /**
  * Insert events main handler for this extension
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class InsertListener {
 

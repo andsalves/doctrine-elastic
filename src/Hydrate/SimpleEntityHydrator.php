@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping\Reflection\ReflectionPropertiesGetter;
  * Common Entity Hydrator
  * Uses ReflectionPropertiesGetter from Doctrine
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class SimpleEntityHydrator implements SimpleHydratorInterface {
 

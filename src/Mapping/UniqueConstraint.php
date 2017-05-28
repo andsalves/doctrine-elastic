@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping\Annotation;
  * Represents a field with some constraint limitation
  * Exemple: Constraint(type='UniqueValue')
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  *
  * @Annotation
  * @Target("PROPERTY")

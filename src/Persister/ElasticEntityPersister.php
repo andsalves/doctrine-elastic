@@ -23,7 +23,7 @@ use DoctrineElastic\Query\ElasticQueryExecutor;
  * Entity Persister for this doctrine elastic extension
  * This class implements some crud operations
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class ElasticEntityPersister {
 
@@ -44,6 +44,9 @@ class ElasticEntityPersister {
 
     /** @var \ReflectionClass */
     private $reflectionClass;
+
+    /** @var ElasticEntityManager */
+    private $em;
 
     public function __construct(ElasticEntityManager $em, $className) {
         $this->className = $className;
@@ -182,8 +185,9 @@ class ElasticEntityPersister {
                     DoctrineElasticEvents::postInsert, new EntityEventArgs($entity)
                 );
             } else {
-                throw new ElasticOperationException(sprintf('Unable to complete update operation, '
-                    . 'with the following elastic return: <br><pre>%s</pre>', var_export($return)));
+                throw new ElasticOperationException(sprintf(
+                    'Unable to complete insert operation: %s', $this->em->getConnection()->getError()
+                ));
             }
         }
     }
@@ -240,9 +244,15 @@ class ElasticEntityPersister {
             }
 
             if (!$this->em->getConnection()->indexExists($indexName)) {
-                $this->em->getConnection()->createIndex($indexName, $mappings);
+                $created = $this->em->getConnection()->createIndex($indexName, $mappings);
             } else {
-                $this->em->getConnection()->createType($indexName, $typeName, $mappings);
+                $created = $this->em->getConnection()->createType($indexName, $typeName, $mappings);
+            }
+
+            if (!$created) {
+                throw new ElasticOperationException(
+                    'Unable to create index or type: ' . $this->em->getConnection()->getError()
+                );
             }
         }
     }
@@ -297,10 +307,7 @@ class ElasticEntityPersister {
         }
     }
 
-    public function load(
-        array $criteria, $entity = null, $assoc = null, array $hints = [],
-        $lockMode = null, $limit = null, array $orderBy = null
-    ) {
+    public function load(array $criteria, $limit = null, array $orderBy = null) {
         $results = $this->loadAll($criteria, $orderBy, $limit);
 
         return count($results) ? $results[0] : null;
@@ -333,8 +340,6 @@ class ElasticEntityPersister {
         }
 
         $this->hydrator->hydrate($entity, $searchResult);
-        $this->hydrator->hydrateByAnnotation($entity, Field::class, $searchResult);
-        $this->hydrator->hydrateByAnnotation($entity, MetaField::class, $searchResult);
 
         return $entity;
     }
@@ -352,8 +357,9 @@ class ElasticEntityPersister {
         if ($updated) {
             $this->hydrateEntityByResult($entity, $return);
         } else {
-            throw new ElasticOperationException(sprintf('Unable to complete update operation, '
-                . 'with the following elastic return: <br><pre>%s</pre>', var_export($return)));
+            throw new ElasticOperationException(sprintf(
+                'Unable to complete update operation: %s ', $this->em->getConnection()->getError()
+            ));
         }
     }
 
@@ -365,7 +371,7 @@ class ElasticEntityPersister {
     public function loadById(array $_idArray, $entity = null) {
         $type = $this->getEntityType();
 
-        if (is_object($entity) && get_class($entity) != $this->class->name) {
+        if (is_object($entity) && get_class($entity) != $this->className) {
             throw new \InvalidArgumentException('You can only get an element by _id with its properly persister');
         }
 
@@ -395,8 +401,9 @@ class ElasticEntityPersister {
         if ($deletion) {
             return true;
         } else {
-            throw new ElasticOperationException(sprintf('Unable to complete delete operation, '
-                . 'with the following elastic return: <br><pre>%s</pre>', var_export($return)));
+            throw new ElasticOperationException(sprintf(
+                'Unable to complete delete operation: %s', $this->em->getConnection()->getError()
+            ));
         }
     }
 }

@@ -11,7 +11,7 @@ use DoctrineElastic\ElasticEntityManager;
 /**
  * Base implementation for ElasticEntityPersister
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 abstract class AbstractEntityPersister implements EntityPersister {
 

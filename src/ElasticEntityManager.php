@@ -21,7 +21,7 @@ use Elasticsearch\Client;
 /**
  * ElasticEntityManager - leading class for all
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class ElasticEntityManager implements EntityManagerInterface {
 
@@ -40,19 +40,15 @@ class ElasticEntityManager implements EntityManagerInterface {
     /** @var Expr */
     protected $expressionBuilder;
 
-    /** @var Client */
-    private $elastic;
-
     /** @var ElasticConnection */
     protected $conn;
 
-    public function __construct(Client $elastic, EventManager $eventManager = null) {
+    public function __construct(ElasticConnection $connection, EventManager $eventManager = null) {
         $this->eventManager = $eventManager;
-        $this->conn = new ElasticConnection($elastic);
+        $this->conn = $connection;
 
         $this->repositoryManager = new ElasticRepositoryManager();
-        $this->unitOfWork = new ElasticUnitOfWork($this, $elastic);
-        $this->elastic = $elastic;
+        $this->unitOfWork = new ElasticUnitOfWork($this);
         $this->registerEventsListeners();
     }
 

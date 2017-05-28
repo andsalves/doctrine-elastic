@@ -14,7 +14,7 @@ use DoctrineElastic\Mapping\MetaField;
 /**
  * Class for query execution with entity hydration task
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class ElasticQueryExecutor {
 
@@ -74,7 +74,7 @@ class ElasticQueryExecutor {
         $results = [];
         $connection = $this->_eem->getConnection();
 
-        if ($connection->getElasticClient()->indices()->exists(['index' => $searchParams->getIndex()])) {
+        if ($connection->indexExists($searchParams->getIndex())) {
             $arrayParams = SearchParser::parseSearchParams($searchParams);
             $results = $connection->search(
                 $arrayParams['index'], $arrayParams['type'], $arrayParams['body'], $arrayParams

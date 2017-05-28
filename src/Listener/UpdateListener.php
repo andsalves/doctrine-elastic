@@ -5,7 +5,7 @@ namespace DoctrineElastic\Listener;
 /**
  * Update events main handler for this extension
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class UpdateListener {
 

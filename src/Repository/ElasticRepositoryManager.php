@@ -5,7 +5,7 @@ namespace DoctrineElastic\Repository;
 use DoctrineElastic\ElasticEntityManager;
 
 /**
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class ElasticRepositoryManager {
 

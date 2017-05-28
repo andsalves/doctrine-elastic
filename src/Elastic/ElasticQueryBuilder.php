@@ -8,7 +8,7 @@ use DoctrineElastic\Exception\ElasticOperationException;
 /**
  * DoctrineElastic QueryBuilder representation
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class ElasticQueryBuilder extends QueryBuilder {
 

@@ -5,7 +5,7 @@ namespace DoctrineElastic\Elastic;
 /**
  * Interface for SearchParams class
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 interface SearchParamsInterface {
 

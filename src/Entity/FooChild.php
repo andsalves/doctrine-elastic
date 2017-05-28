@@ -7,7 +7,7 @@ use DoctrineElastic\Mapping as ElasticORM;
 
 /**
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  *
  * @ElasticORM\Type(name="foo_child", index="foo_family", parentClass="DoctrineElastic\Entity\FooParent")
  * @ORM\Entity

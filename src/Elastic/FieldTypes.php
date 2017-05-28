@@ -5,7 +5,7 @@ namespace DoctrineElastic\Elastic;
 /**
  * This class represents types and maps for types common to elastic
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class FieldTypes {
 

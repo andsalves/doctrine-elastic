@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
 /**
  * Adapted AnnotationDriver for this elastic doctrine extension
  *
- * @author Ands
+ * @author Andsalves <ands.alves.nunes@gmail.com>
  */
 class ElasticAnnotationDriver extends AnnotationDriver {
 
