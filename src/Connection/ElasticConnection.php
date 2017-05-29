@@ -67,7 +67,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             $params['aliases'] = $aliases;
         }
 
-        $response = $this->curlRequest->request("$index?refresh=true", $params, 'PUT');
+        $response = $this->curlRequest->request($index, $params, 'PUT');
         $return = $response['content'];
 
         if (isset($return['acknowledged']) && $return['acknowledged']) {
@@ -125,7 +125,7 @@ class ElasticConnection implements ElasticConnectionInterface {
 
         $mappings = MappingHelper::patchMappings($mappings, floor($this->getElasticsearchVersion()));
 
-        $url = "$index/_mapping/$type?refresh=true";
+        $url = "$index/_mapping/$type";
         $response = $this->curlRequest->request($url, $mappings, 'PUT');
 
         $this->throwExceptionFromResponse($response, "Error creating type '$type' in '$index' index");
@@ -166,7 +166,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             unset($body['_id']);
         }
 
-        $url = "$url?" . http_build_query(array_merge(['refresh' => true], $queryParams));
+        $url = "$url?" . http_build_query(array_merge(['refresh' => "true"], $queryParams));
 
         $response = $this->curlRequest->request($url, $body, 'POST');
 
@@ -203,7 +203,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             $params = ['doc' => $body];
         }
 
-        $url = "$index/$type/$_id/_update?" . http_build_query(array_merge(['refresh' => true], $queryParams));
+        $url = "$index/$type/$_id/_update?" . http_build_query(array_merge(['refresh' => 'true'], $queryParams));
         $response = $this->curlRequest->request($url, $params, 'POST');
         $this->throwExceptionFromResponse($response);
 
@@ -231,7 +231,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             return false;
         }
 
-        $url = "$index/$type/$_id?" . http_build_query(array_merge(['refresh' => true], $queryParams));
+        $url = "$index/$type/$_id?" . http_build_query(array_merge(['refresh' => 'true'], $queryParams));
         $response = $this->curlRequest->request($url, [], 'DELETE');
         $this->throwExceptionFromResponse($response);
         $return = $response['content'];
@@ -271,7 +271,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             return null;
         }
 
-        $url = "$index/$type/$_id?" . http_build_query(array_merge(['refresh' => true], $queryParams));
+        $url = "$index/$type/$_id";
         $response = $this->curlRequest->request($url, [], 'GET');
         $return = $response['content'];
 
@@ -307,7 +307,8 @@ class ElasticConnection implements ElasticConnectionInterface {
             unset($body['query']);
         }
 
-        $url = "$index/$type/_search?" . http_build_query(array_merge(['refresh' => true], $queryParams));
+
+        $url = "$index/$type/_search";
         $response = $this->curlRequest->request($url, $body, 'POST');
         $this->throwExceptionFromResponse($response);
         $return = $response['content'];
