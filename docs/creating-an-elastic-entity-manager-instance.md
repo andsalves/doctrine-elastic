@@ -1,4 +1,4 @@
-# Creating an ElasticEntityManager Instance
+# (DEPRECATED) Creating an ElasticEntityManager Instance
 #
 
 DoctrineElastic\ElasticEntityManager is the EntityManager equivalent for this Elasticsearch Doctrine Adaptation. 
