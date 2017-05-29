@@ -7,8 +7,6 @@ Last stable release: v0.7.1 (Only Elasticsearch 2.x support)
 For Elasticsearch 5.x support, see v1.2-beta
 
 ## Get Started
-### Create a ElasticEntityManager
-We can find about how to create an ElasticEntityManager in docs at https://github.com/andsalves/doctrine-elastic/blob/master/docs/creating-an-elastic-entity-manager-instance.md
 
 ### Creating a working DoctrineElastic Entity
 Just like Doctrine, we need to set some annotations in our entities, here is an example:
