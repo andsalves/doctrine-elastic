@@ -16,7 +16,6 @@ use DoctrineElastic\Listener\InsertListener;
 use DoctrineElastic\Listener\QueryListener;
 use DoctrineElastic\Listener\UpdateListener;
 use DoctrineElastic\Repository\ElasticRepositoryManager;
-use Elasticsearch\Client;
 
 /**
  * ElasticEntityManager - leading class for all

@@ -74,7 +74,7 @@ interface ElasticConnectionInterface {
     /**
      * @param string $index
      * @param string $type
-     * @return array
+     * @return bool
      */
     public function typeExists($index, $type);
 
