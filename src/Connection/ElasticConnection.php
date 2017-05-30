@@ -150,16 +150,6 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @return bool
      */
     public function insert($index, $type, array $body, array $queryParams = [], array &$return = null) {
-        if (!$this->indexExists($index)) {
-            trigger_error("$index index does not exists at insert attempt");
-            return false;
-        }
-
-        if (!$this->typeExists($index, $type)) {
-            trigger_error("$type type does not exists at insert attempt");
-            return false;
-        }
-
         $url = "$index/$type";
         if (isset($body['_id'])) {
             $url .= '/' . $body['_id'];
