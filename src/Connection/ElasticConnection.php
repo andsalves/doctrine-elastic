@@ -156,7 +156,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             'body' => $body
         );
 
-        $params = array_merge_recursive($defaultParams, $mergeParams);
+        $params = array_replace_recursive($defaultParams, $mergeParams);
 
         $return = $this->elastic->create($params);
 
@@ -192,7 +192,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             )
         );
 
-        $params = array_merge_recursive($defaultParams, $mergeParams);
+        $params = array_replace_recursive($defaultParams, $mergeParams);
 
         $return = $this->elastic->update($params);
 
@@ -223,7 +223,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             'refresh' => "true"
         );
 
-        $params = array_merge_recursive($defaultParams, $mergeParams);
+        $params = array_replace_recursive($defaultParams, $mergeParams);
 
         $return = $this->elastic->delete($params);
 
@@ -265,7 +265,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             '_source_exclude' => []
         );
 
-        $params = array_merge_recursive($defaultParams, $mergeParams);
+        $params = array_replace_recursive($defaultParams, $mergeParams);
         $existsParams = array_filter($params, function ($key) {
             return in_array($key, ['id', 'index', 'type', 'refresh']);
         }, ARRAY_FILTER_USE_KEY);
