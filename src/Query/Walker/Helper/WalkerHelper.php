@@ -19,18 +19,10 @@ class WalkerHelper {
      */
     public function addSubQueryStatement(array $subBody, array &$body, $toStatement = 'must') {
         if (isset($body['query']['bool'][$toStatement])) {
-            $body['query']['bool'][$toStatement][] = $subBody;
-        } else {
-            $tempBody = array(
-                'query' => array(
-                    'bool' => array(
-                        $toStatement => [$subBody]
-                    )
-                )
-            );
-
-            $body = array_merge_recursive($body, $tempBody);
-        }
+           $body['query']['bool'][$toStatement][] = $subBody['query'];
+       } else {
+           $body = array_merge_recursive($body, $subBody);
+       }
     }
 
     public function addBodyStatement($field, $operator, $value, array &$body) {
