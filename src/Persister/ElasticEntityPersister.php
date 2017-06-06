@@ -380,7 +380,7 @@ class ElasticEntityPersister {
         $documentData = $this->em->getConnection()->get($type->getIndex(), $type->getName(), $id);
 
         if ($documentData) {
-            $entity = is_object($entity) ? $entity : new $this->class->name;
+            $entity = is_object($entity) ? $entity : new $this->className;
             $this->hydrateEntityByResult($entity, $documentData);
 
             return $entity;
