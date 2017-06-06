@@ -297,8 +297,34 @@ class ElasticConnection implements ElasticConnectionInterface {
             unset($body['query']);
         }
 
-
         $url = "$index/$type/_search";
+
+        $cleanQuery = function ($queryPart, callable $recusiveFn) {
+            if (!is_array($queryPart)) {
+                return $queryPart;
+            }
+
+            foreach ($queryPart as $key => $item) {
+                if ($key == 'query' && isset($queryPart['query']['bool'])) {
+                    $queryPart['bool'] = $recusiveFn($queryPart['query']['bool'], $recusiveFn);
+                    unset($queryPart['query']['bool']);
+                }
+
+                if (isset($item['query']['bool'])) {
+                    $queryPart[$key]['bool'] = $recusiveFn($item['query']['bool'], $recusiveFn);
+                    unset($queryPart[$key]['query']);
+                } else if (is_array($item)) {
+                    $queryPart[$key] = $recusiveFn($item, $recusiveFn);
+                }
+            }
+
+            return $queryPart;
+        };
+
+        foreach ($body['query']['bool'] as $key => $item) {
+            $body['query']['bool'][$key] = $cleanQuery($item, $cleanQuery);
+        }
+
         $response = $this->curlRequest->request($url, $body, 'POST');
         $this->throwExceptionFromResponse($response);
         $return = $response['content'];
