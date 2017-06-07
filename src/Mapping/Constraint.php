@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping\Annotation;
 
 /**
  * Represents a field with some constraint limitation
- * Exemple: Constraint(type='UniqueValue')
+ * Exemple: Constraint(type="UniqueValue")
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  *
