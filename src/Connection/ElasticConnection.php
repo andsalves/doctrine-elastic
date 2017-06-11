@@ -321,9 +321,13 @@ class ElasticConnection implements ElasticConnectionInterface {
             return $queryPart;
         };
 
-        foreach ($body['query']['bool'] as $key => $item) {
-            $body['query']['bool'][$key] = $cleanQuery($item, $cleanQuery);
+
+        if(isset($body['query']['bool'])){
+            foreach ($body['query']['bool'] as $key => $item) {
+                $body['query']['bool'][$key] = $cleanQuery($item, $cleanQuery);
+            }
         }
+
 
         $response = $this->curlRequest->request($url, $body, 'POST');
         $this->throwExceptionFromResponse($response);
