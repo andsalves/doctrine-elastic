@@ -297,7 +297,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             unset($body['query']);
         }
 
-        $url = "$index/$type/_search";
+        $url = "$index/$type/_search?" . http_build_query($queryParams);
 
         $cleanQuery = function ($queryPart, callable $recusiveFn) {
             if (!is_array($queryPart)) {
