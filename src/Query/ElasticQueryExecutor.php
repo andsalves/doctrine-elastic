@@ -77,7 +77,11 @@ class ElasticQueryExecutor {
         if ($connection->indexExists($searchParams->getIndex())) {
             $arrayParams = SearchParser::parseSearchParams($searchParams);
             $results = $connection->search(
-                $arrayParams['index'], $arrayParams['type'], $arrayParams['body'], $arrayParams
+                $arrayParams['index'], $arrayParams['type'], $arrayParams['body'], array(
+                    'size' => $searchParams->getSize(),
+                    'from' => $searchParams->getFrom(),
+                    'sort' => $searchParams->getSort(),
+                )
             );
         }
 
