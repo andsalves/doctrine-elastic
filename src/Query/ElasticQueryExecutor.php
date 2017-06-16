@@ -79,8 +79,7 @@ class ElasticQueryExecutor {
             $results = $connection->search(
                 $arrayParams['index'], $arrayParams['type'], $arrayParams['body'], array(
                     'size' => $searchParams->getSize(),
-                    'from' => $searchParams->getFrom(),
-                    'sort' => $searchParams->getSort(),
+                    'from' => $searchParams->getFrom()
                 )
             );
         }
