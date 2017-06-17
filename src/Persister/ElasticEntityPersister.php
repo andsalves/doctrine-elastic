@@ -276,9 +276,15 @@ class ElasticEntityPersister {
                         $element = $this->load([$property => $value]);
 
                         if (boolval($element)) {
-                            throw new ElasticConstraintException(sprintf(
+                            $messageError = sprintf(
                                 "Unique field %s already has a document with value '%s'", $property, $value
-                            ));
+                            );
+                            
+                            if ($annotation->options) {
+                                $messageError = array_key_exists('message', $annotation->options) ? $annotation->options['message'] : $messageError;
+                            }
+
+                            throw new ElasticConstraintException($messageError);
                         }
                     }
 
