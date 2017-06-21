@@ -321,7 +321,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             return $queryPart;
         };
 
-        if (isset($body['query']['bool'])) {
+        if (isset($body['query'])) {
             foreach ($body['query']['bool'] as $key => $item) {
                 $body['query']['bool'][$key] = $cleanQuery($item, $cleanQuery);
             }
