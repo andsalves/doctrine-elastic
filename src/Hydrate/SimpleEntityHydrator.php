@@ -43,6 +43,14 @@ class SimpleEntityHydrator implements SimpleHydratorInterface {
                 }
             }
         }
+        
+        if (method_exists($entity, 'exchangeArray')) {
+            $entity->exchangeArray($data);
+        }
+        
+        if (method_exists($entity, 'populate')) {
+            $entity->populate($data);
+        }
 
         return $entity;
     }
