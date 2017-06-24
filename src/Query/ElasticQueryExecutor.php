@@ -59,13 +59,15 @@ class ElasticQueryExecutor {
     }
 
     private function hydrateEntityWith($entity, array $rawData) {
-        $this->_hydrator->hydrate($entity, $rawData);
         // $this->_hydrator->hydrateByAnnotation($entity, Field::class, $rawData);
         // $this->_hydrator->hydrateByAnnotation($entity, MetaField::class, $rawData);
 
         if (isset($rawData['_source'])) {
+            $rawData['_source']['_id'] = $rawData['_id'];
             $this->hydrateEntityWith($entity, $rawData['_source']);
         }
+        
+        $this->_hydrator->hydrate($entity, $rawData);
 
         return $entity;
     }
