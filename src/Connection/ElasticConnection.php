@@ -291,7 +291,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             return [];
         }
 
-        $this->unsetEmpties($body);
+        $body = $this->unsetEmpties($body);
 
         if (isset($body['query']) && empty($body['query'])) {
             unset($body['query']);
@@ -338,24 +338,20 @@ class ElasticConnection implements ElasticConnectionInterface {
         return [];
     }
 
-    private function unsetEmpties(array &$array, array &$parent = null) {
-        if (!is_array($array)) {
-            return null;
-        }
+    private function unsetEmpties(array $haystack) {
+        $selfFn = __FUNCTION__;
 
-        for ($count = 2; $count > 0; $count--) {
-            foreach ($array as $key => $item) {
-                if (is_array($item) && empty($item)) {
-                    unset($array[$key]);
+        foreach ($haystack as $key => $value) {
+            if (is_array($value)) {
+                $haystack[$key] = $this->$selfFn($haystack[$key]);
+            }
 
-                    if (is_array($parent)) {
-                        $this->unsetEmpties($parent);
-                    }
-                } else if (is_array($item)) {
-                    $this->unsetEmpties($array[$key], $array);
-                }
+            if (empty($haystack[$key])) {
+                unset($haystack[$key]);
             }
         }
+
+        return $haystack;
     }
 
     /**
