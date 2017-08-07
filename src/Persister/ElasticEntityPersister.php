@@ -152,14 +152,13 @@ class ElasticEntityPersister {
     public function executeInserts() {
         foreach ($this->queuedInserts as $entity) {
             $type = $this->getEntityType();
-            $entityCopy = clone $entity;
 
             $this->em->getEventManager()->dispatchEvent(
-                DoctrineElasticEvents::beforeInsert, new EntityEventArgs($entityCopy)
+                DoctrineElasticEvents::beforeInsert, new EntityEventArgs($entity)
             );
 
-            $fieldsData = $this->hydrator->extractWithAnnotation($entityCopy, Field::class);
-            $metaFieldsData = $this->hydrator->extractWithAnnotation($entityCopy, MetaField::class);
+            $fieldsData = $this->hydrator->extractWithAnnotation($entity, Field::class);
+            $metaFieldsData = $this->hydrator->extractWithAnnotation($entity, MetaField::class);
             $mergeParams = [];
 
             if (array_key_exists('_id', $metaFieldsData) && !empty($metaFieldsData['_id'])) {
@@ -172,7 +171,7 @@ class ElasticEntityPersister {
 
             $this->createTypeIfNotExists($type, $this->className);
 
-            $this->checkConstraints($entityCopy);
+            $this->checkConstraints($entity);
             $return = [];
 
             $inserted = $this->em->getConnection()->insert(
