@@ -44,7 +44,8 @@ class FooType {
     
     /**
      * @var string
-     *
+     * 
+     * Below: Use 'string' for elasticsearch 2.x and 'keyword' for elasticsearch 5.x+
      * @ElasticORM\Field(name="custom_field", type="string")
      */
     private $customField;
