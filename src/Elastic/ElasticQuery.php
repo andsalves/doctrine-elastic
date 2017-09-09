@@ -2,6 +2,14 @@
 
 namespace DoctrineElastic\Elastic;
 
+use Doctrine\Common\Persistence\Mapping\Driver\MappingDriverChain;
+use Doctrine\DBAL\Connection;
+use Doctrine\ORM\Configuration;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
+use Doctrine\ORM\Query;
+use Doctrine\ORM\Query\Parser;
+use DoctrineElastic\DoctrineMock\GetConfigurationEntityManager;
 use DoctrineElastic\ElasticEntityManager;
 use DoctrineElastic\Query\QueryParser;
 use DoctrineElastic\Query\ElasticQueryExecutor;
@@ -37,6 +45,7 @@ class ElasticQuery {
     }
 
     public function getResult() {
+
         $parser = new QueryParser($this);
         $searchParams = $parser->parseElasticQuery();
 

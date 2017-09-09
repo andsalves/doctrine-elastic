@@ -2,9 +2,11 @@
 
 namespace DoctrineElastic;
 
+use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\EventManager;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\ResultSetMapping;
 use DoctrineElastic\Connection\ElasticConnection;
@@ -15,6 +17,7 @@ use DoctrineElastic\Listener\DeleteListener;
 use DoctrineElastic\Listener\InsertListener;
 use DoctrineElastic\Listener\QueryListener;
 use DoctrineElastic\Listener\UpdateListener;
+use DoctrineElastic\Mapping\Driver\ElasticAnnotationDriver;
 use DoctrineElastic\Repository\ElasticRepositoryManager;
 
 /**
@@ -41,6 +44,9 @@ class ElasticEntityManager implements EntityManagerInterface {
 
     /** @var ElasticConnection */
     protected $conn;
+
+    /** @var ElasticAnnotationDriver */
+    private $annotationDriver;
 
     public function __construct(ElasticConnection $connection, EventManager $eventManager = null) {
         $this->eventManager = $eventManager;
@@ -257,7 +263,25 @@ class ElasticEntityManager implements EntityManagerInterface {
         trigger_error(__METHOD__ . ' method is not supported. ');
     }
 
+    private function getAnnotationDriver(AnnotationReader $annotationReader = null) {
+        if (is_null($this->annotationDriver)) {
+            $this->annotationDriver = new ElasticAnnotationDriver($annotationReader);
+        }
+
+        return $this->annotationDriver;
+    }
+
+    /**
+     * @param string $className
+     * @return ClassMetadata
+     */
     public function getClassMetadata($className) {
-        trigger_error(__METHOD__ . ' method not supported. ');
+        $metadata = new ClassMetadata($className);
+
+        $this->getAnnotationDriver(
+            $this->getUnitOfWork()->getEntityPersister($className)->getAnnotionReader()
+        )->loadMetadataForClass($className, $metadata);
+
+        return $metadata;
     }
 }
