@@ -4,6 +4,7 @@ namespace DoctrineElastic\Connection;
 
 use DoctrineElastic\Exception\ConnectionException;
 use DoctrineElastic\Exception\ElasticOperationException;
+use DoctrineElastic\Exception\InvalidParamsException;
 use DoctrineElastic\Helper\MappingHelper;
 use DoctrineElastic\Http\CurlRequest;
 use DoctrineElastic\Traiting\ErrorGetterTrait;
@@ -336,6 +337,82 @@ class ElasticConnection implements ElasticConnectionInterface {
         }
 
         return [];
+    }
+
+    /**
+     * @param $action
+     * @param $index
+     * @param $type
+     * @param array|null $data
+     * @return array|bool
+     * @throws InvalidParamsException
+     */
+    public function bulk($action, $index, $type, array $data = null) {
+        $bulkData = '';
+
+        if (!in_array($action, ['create', 'index', 'update']) && !is_array($data)) {
+            throw new InvalidParamsException(
+                "\$data param must be an array for '$action' bulk action"
+            );
+        }
+
+        switch ($action) {
+            case 'create':
+            case 'index':
+                foreach ($data as $doc) {
+                    $actionParams = ['_index' => $index, '_type' => $type];
+
+                    if (isset($doc['_id'])) {
+                        $actionParams['_id'] = $doc['_id'];
+                        unset($doc['_id']);
+                    }
+
+                    $bulkData .= json_encode([$action => $actionParams]) . "\n";
+                    $bulkData .= json_encode($doc) . "\n";
+                }
+                break;
+            case 'update':
+            case 'delete':
+                foreach ($data as $doc) {
+                    if (!isset($doc['_id'])) {
+                        throw new InvalidParamsException(
+                            "_id field must be provided for each item in \$data param for $action action"
+                        );
+                    }
+
+                    $actionParams = ['_index' => $index, '_type' => $type, '_id' => $doc['_id']];
+                    unset($doc['_id']);
+
+                    if ($action == 'update') {
+                        if (!array_key_exists('doc', $doc)) {
+                            $doc = ['doc' => $doc];
+                        }
+
+                        $bulkData .= json_encode([$action => $actionParams]) . "\n";
+                        $bulkData .= json_encode($doc) . "\n";
+                    }
+                }
+
+                break;
+            default:
+                $bulkActions = ['index', 'create', 'delete', 'update'];
+
+                throw new InvalidParamsException(
+                    "Invalid 'action' param provided. Must be one of those: " . implode('|', $bulkActions)
+                );
+        }
+
+        $response = $this->curlRequest->request("/_bulk", $bulkData, 'POST', [
+            'Content-Type: application/x-ndjson; charset=utf-8'
+        ]);
+
+        if (isset($response['status']) && $response['status'] == 200) {
+            return $response['content'];
+        } elseif (isset($response['content'])) {
+            return $response['content'];
+        }
+
+        return false;
     }
 
     private function unsetEmpties(array $haystack) {

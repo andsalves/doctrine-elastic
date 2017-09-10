@@ -20,8 +20,8 @@ before_script:
   - mkdir -p build/logs
 
 script:
-  - export ELASTICSEARCH_ROOT_VERSION=2 && phpunit --coverage-clover build/logs/clover.xml
-  - export ELASTICSEARCH_ROOT_VERSION=5 && phpunit --coverage-clover build/logs/clover.xml
+  - export ELASTICSEARCH_ROOT_VERSION=2 && vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+  - export ELASTICSEARCH_ROOT_VERSION=5 && vendor/bin/phpunit --coverage-clover build/logs/clover.xml
 
 after_success:
   - sh -c 'if [ "$TRAVIS_PHP_VERSION" != "hhvm" ]; then php vendor/bin/coveralls -v; fi;'

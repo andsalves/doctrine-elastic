@@ -10,7 +10,7 @@ class CurlRequest {
 
     protected $baseUrl = '';
 
-    public function request($url, array $data, $method = 'POST', array $headers = null) {
+    public function request($url, $data, $method = 'POST', array $headers = null) {
         try {
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -23,8 +23,12 @@ class CurlRequest {
                 case 'GET':
                     $url .= '?';
 
-                    foreach ($data as $key => $value) {
-                        $url .= $key . '=' . $value . '&';
+                    if (is_array($data)) {
+                        foreach ($data as $key => $value) {
+                            $url .= $key . '=' . $value . '&';
+                        }
+                    } elseif (is_string($data)) {
+                        $url .= $data;
                     }
 
                     rtrim($url, '&');
@@ -42,8 +46,8 @@ class CurlRequest {
             }
 
             if (in_array($method, ['POST', 'PUT'])) {
-                if (!empty($data)) {
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                if (boolval($data)) {
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, is_array($data) ? json_encode($data) : $data);
                 }
             }
 

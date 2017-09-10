@@ -11,7 +11,7 @@ use DoctrineElastic\ElasticEntityManager;
  *
  * @author Ands
  */
-abstract class BaseTestCaseTest extends \PHPUnit_Framework_TestCase {
+abstract class BaseTestCaseTest extends \PHPUnit\Framework\TestCase {
 
     private static $esVersionPrinted = false;
 
