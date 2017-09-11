@@ -3,8 +3,8 @@ Doctrine Adaptation Library for Elasticsearch.
 
 [![Build Status](https://travis-ci.org/andsalves/doctrine-elastic.svg?branch=master)](https://travis-ci.org/andsalves/doctrine-elastic) [![Coverage Status](https://coveralls.io/repos/github/andsalves/doctrine-elastic/badge.svg)](https://coveralls.io/github/andsalves/doctrine-elastic) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/andsalves/doctrine-elastic/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/andsalves/doctrine-elastic/?branch=master)
 
-Last stable release: v0.7.2 (Only Elasticsearch 2.x support)
-For Elasticsearch 5.x support, see v1.2+ (Elasticsearch 2.x and 5.x support)
+Last stable release: v1.2.3 (Elasticsearch 2.x or 5.x support)
+Tests on Elasticsearch 2.4.1/5.1/5.5 - PHP 5.6/7.0
 
 ## Get Started
 
