@@ -10,7 +10,7 @@ Tests on Elasticsearch 2.4.1/5.1/5.5 - PHP 5.6/7.0
 
 ### Creating a working ElasticEntityManager
 
-Please see at /docs/creating-an-elastic-entity-manager-instance.md
+Please see at https://github.com/andsalves/doctrine-elastic/blob/master/docs/creating-an-elastic-entity-manager-instance.md
 
 ### Creating a working DoctrineElastic Entity
 Just like Doctrine, we need to set some annotations in our entities, here is an example:
