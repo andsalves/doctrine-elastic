@@ -15,7 +15,6 @@ use Doctrine\ORM\Query\AST\Literal;
 use Doctrine\ORM\Query\AST\Node;
 use Doctrine\ORM\Query\AST\NullComparisonExpression;
 use Doctrine\ORM\Query\AST\PathExpression;
-use Doctrine\ORM\Query\AST\SimpleArithmeticExpression;
 use Doctrine\ORM\Query\AST\WhereClause;
 use DoctrineElastic\Elastic\ElasticQuery;
 use DoctrineElastic\Elastic\SearchParams;
@@ -235,8 +234,7 @@ class WhereWalker {
             $valueExpr = $rightExpr->simpleArithmeticExpression;
         }
 
-        $ESfield = $this->getFieldOrThrowError($pathExpr->field);
-        $field = $ESfield->name;
+        $field = $this->getElasticFieldNameOrThrowError($pathExpr->field);
 
         if ($valueExpr instanceof Literal) {
             $value = $valueExpr->value;
@@ -257,8 +255,7 @@ class WhereWalker {
         /** @var Literal $stringPattern */
         $stringPattern = $likeExpr->stringPattern;
 
-        $ESField = $this->getFieldOrThrowError($stringExpr->field);
-        $field = $ESField->name;
+        $field = $this->getElasticFieldNameOrThrowError($stringExpr->field);
         $value = $stringPattern->value;
 
         $this->addBodyStatement($field, $operator, $value, $searchParams);
@@ -283,8 +280,7 @@ class WhereWalker {
             $value1 = $lSimpleArithExpr->value;
             $value2 = $rSimpleArithExpr->value;
 
-            $ESField = $this->getFieldOrThrowError($fieldArithExpr->field);
-            $field = $ESField->name;
+            $field = $this->getElasticFieldNameOrThrowError($fieldArithExpr->field);
 
             $this->addBodyStatement($field, OperatorsMap::GTE, $value1, $searchParams);
             $this->addBodyStatement($field, OperatorsMap::LTE, $value2, $searchParams);
@@ -297,8 +293,7 @@ class WhereWalker {
         /** @var PathExpression $expr */
         $expr = $nullComExpr->expression;
 
-        $ESfield = $this->getFieldOrThrowError($expr->field);
-        $field = $ESfield->name;
+        $field = $this->getElasticFieldNameOrThrowError($expr->field);
         $operator = $nullComExpr->not ? OperatorsMap::NEQ : OperatorsMap::EQ;
 
         $this->addBodyStatement($field, $operator, null, $searchParams);
@@ -308,6 +303,19 @@ class WhereWalker {
         $body = $searchParams->getBody();
         $this->walkerHelper->addBodyStatement($field, $operator, $value, $body);
         $searchParams->setBody($body);
+    }
+
+    private function getElasticFieldNameOrThrowError($columnName) {
+        if (strstr($columnName, '.')) {
+            $fieldLayers = explode('.', $columnName);
+            $ESfield = $this->getFieldOrThrowError($fieldLayers[0]);
+            $field = "{$ESfield->name}." . implode('.', array_slice($fieldLayers, 1));
+        } else {
+            $ESfield = $this->getFieldOrThrowError($columnName);
+            $field = $ESfield->name;
+        }
+
+        return $field;
     }
 
     /**

@@ -61,9 +61,11 @@ class WalkerHelper {
                 case OperatorsMap::EQ:
                 case OperatorsMap::NEQ:
                     if (is_null($value)) {
-                        $filterField = ($operator == OperatorsMap::EQ) ? 'missing' : 'exists';
-                        $bodyTemp['query']['bool']['filter'][] = array(
-                            $filterField => ['field' => $field]
+                        $boolField = 'must' . ($operator == OperatorsMap::EQ ? '_not' : '');
+                        $itemSearch = array(
+                            'exists' => array(
+                                'field' => $field
+                            )
                         );
                     } else {
                         $boolField = 'must' . ($operator == OperatorsMap::EQ ? '' : '_not');
@@ -75,8 +77,10 @@ class WalkerHelper {
                                 )
                             )
                         );
-                        $bodyTemp['query']['bool'][$boolField][] = $itemSearch;
                     }
+
+                    $bodyTemp['query']['bool'][$boolField][] = $itemSearch;
+
                     break;
                 case OperatorsMap::UNLIKE:
                 case OperatorsMap::LIKE:
