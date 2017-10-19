@@ -291,6 +291,12 @@ class ElasticConnection implements ElasticConnectionInterface {
         if (!$this->indexExists($index)) {
             return [];
         }
+        
+        $queryParams = array_replace_recursive([
+            'size' => self::DEFAULT_MAX_RESULTS
+        ], array_filter($queryParams, function ($value) {
+            return $value !== null;
+        }));
 
         $body = $this->unsetEmpties($body);
 
