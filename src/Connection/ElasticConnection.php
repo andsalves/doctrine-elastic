@@ -429,7 +429,7 @@ class ElasticConnection implements ElasticConnectionInterface {
                 $haystack[$key] = $this->$selfFn($haystack[$key]);
             }
 
-            if (empty($haystack[$key])) {
+            if (!isset($haystack[$key])) {
                 unset($haystack[$key]);
             }
         }
