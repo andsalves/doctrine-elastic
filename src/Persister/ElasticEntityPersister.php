@@ -18,6 +18,8 @@ use DoctrineElastic\Mapping\Field;
 use DoctrineElastic\Mapping\MetaField;
 use DoctrineElastic\Mapping\Type;
 use DoctrineElastic\Query\ElasticQueryExecutor;
+use DoctrineElastic\Query\Walker\Helper\WalkerHelper;
+use DoctrineElastic\Query\Walker\OperatorsMap;
 
 /**
  * Entity Persister for this doctrine elastic extension
@@ -48,6 +50,9 @@ class ElasticEntityPersister {
     /** @var ElasticEntityManager */
     private $em;
 
+    /** @var WalkerHelper */
+    private $walkerHelper;
+
     public function __construct(ElasticEntityManager $em, $className) {
         $this->className = $className;
         $this->annotationReader = new AnnotationReader();
@@ -55,6 +60,7 @@ class ElasticEntityPersister {
         $this->hydrator = new AnnotationEntityHydrator();
         $this->validateEntity();
         $this->em = $em;
+        $this->walkerHelper = new WalkerHelper();
     }
 
     public function getReflectionClass() {
@@ -90,8 +96,8 @@ class ElasticEntityPersister {
 
     public function loadAll(array $criteria = [], array $orderBy = null, $limit = null, $offset = null) {
         $type = $this->getEntityType();
-        $sort = $must = [];
-        $body = ['query' => ['bool' => ['must' => $must]]];
+        $sort = [];
+        $body = ['query' => ['bool' => ['must' => []]]];
         /** @var Field $annotationProperty */
         $fieldAnnotations = $this->hydrator->extractSpecAnnotations($this->className, Field::class);
         /** @var MetaField[] $metaFieldAnnotations */
@@ -115,10 +121,8 @@ class ElasticEntityPersister {
             if ($annotation->name === '_parent') {
                 $searchParams->setParent($criteria[$columnName]);
             } else {
-                $must[] = array(
-                    'match' => array(
-                        $annotation->name => $criteria[$columnName],
-                    )
+                $this->walkerHelper->addBodyStatement(
+                    $annotation->name, OperatorsMap::EQ, $criteria[$columnName], $body
                 );
             }
         }
@@ -132,8 +136,6 @@ class ElasticEntityPersister {
                 }
             }
         }
-
-        $body['query']['bool']['must'] = $must;
 
         $searchParams->setIndex($type->getIndex());
         $searchParams->setType($type->getName());
@@ -195,6 +197,7 @@ class ElasticEntityPersister {
      * @param Type $type
      * @param string $className
      * @throws ElasticConstraintException
+     * @throws ElasticOperationException
      */
     private function createTypeIfNotExists(Type $type, $className) {
         foreach ($type->getChildClasses() as $childClass) {
