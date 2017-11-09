@@ -11,7 +11,7 @@
     "minimum-stability": "dev",
     "require": {
         "doctrine/orm": "^2.5",
-        "satooshi/php-coveralls": "1.0.2"
+        "satooshi/php-coveralls": "dev-master"
     },
     "require-dev": {
         "phpunit/phpunit": "~5.7.1"
