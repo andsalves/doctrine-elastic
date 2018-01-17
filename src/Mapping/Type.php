@@ -17,8 +17,8 @@ use DoctrineElastic\Helper\IndexHelper;
  * @Annotation
  * @Target("CLASS")
  */
-class Type implements Annotation {
-
+class Type implements Annotation
+{
     protected static $defaultIndex = null;
     protected static $defaultName = null;
 
@@ -35,7 +35,8 @@ class Type implements Annotation {
     public $childClasses = [];
 
     /** @return string */
-    public function getName() {
+    public function getName()
+    {
         return $this->name ?: self::getDefaultName();
     }
 
@@ -43,13 +44,15 @@ class Type implements Annotation {
      * @param string $name
      * @return Type
      */
-    public function setName($name) {
+    public function setName($name)
+    {
         $this->name = $name;
         return $this;
     }
 
     /** @return string */
-    public function getIndex() {
+    public function getIndex()
+    {
         return $this->index ?: self::getDefaultIndex();
     }
 
@@ -57,36 +60,42 @@ class Type implements Annotation {
      * @param string $index
      * @return Type
      */
-    public function setIndex($index) {
+    public function setIndex($index)
+    {
         $this->index = $index;
         return $this;
     }
 
     /** @return null|string */
-    public static function getDefaultIndex() {
+    public static function getDefaultIndex()
+    {
         return self::$defaultIndex;
     }
 
     /** @param string $defaultIndex */
-    public static function setDefaultIndex($defaultIndex) {
+    public static function setDefaultIndex($defaultIndex)
+    {
         IndexHelper::clearIndex($defaultIndex);
         self::$defaultIndex = $defaultIndex;
     }
 
     /** @return null|string */
-    public static function getDefaultName() {
+    public static function getDefaultName()
+    {
         return self::$defaultName;
     }
 
     /** @param null|string $defaultType */
-    public static function setDefaultName($defaultType) {
+    public static function setDefaultName($defaultType)
+    {
         self::$defaultName = $defaultType;
     }
 
     /**
      * @return string
      */
-    public function getParentClass() {
+    public function getParentClass()
+    {
         return $this->parentClass;
     }
 
@@ -94,7 +103,8 @@ class Type implements Annotation {
      * @param string $parentClass
      * @return Type
      */
-    public function setParentClass($parentClass) {
+    public function setParentClass($parentClass)
+    {
         $this->parentClass = $parentClass;
         return $this;
     }
@@ -102,7 +112,8 @@ class Type implements Annotation {
     /**
      * @return array
      */
-    public function getChildClasses() {
+    public function getChildClasses()
+    {
         return $this->childClasses;
     }
 
@@ -110,16 +121,19 @@ class Type implements Annotation {
      * @param array $childClasses
      * @return Type
      */
-    public function setChildClasses(array $childClasses) {
+    public function setChildClasses(array $childClasses)
+    {
         $this->childClasses = $childClasses;
         return $this;
     }
 
-    public function isValid() {
+    public function isValid()
+    {
         return is_string($this->getIndex()) && is_string($this->getName());
     }
 
-    public function getErrorMessage() {
+    public function getErrorMessage()
+    {
         $baseMessage = "'%s' property wasn't set in %s annotation";
 
         if (!is_string($this->index)) {

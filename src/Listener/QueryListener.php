@@ -13,23 +13,27 @@ use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class QueryListener {
+class QueryListener
+{
 
     /** @var AnnotationEntityHydrator */
     protected $hydrator;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->hydrator = new AnnotationEntityHydrator();
     }
 
-    public function beforeQuery(QueryEventArgs $eventArgs) {
+    public function beforeQuery(QueryEventArgs $eventArgs)
+    {
 
     }
 
     /**
      * @param QueryEventArgs $eventArgs
      */
-    public function postQuery(QueryEventArgs $eventArgs) {
+    public function postQuery(QueryEventArgs $eventArgs)
+    {
         $results = $eventArgs->getResults();
         $entityManager = $eventArgs->getEntityManager();
         $targetEntity = $eventArgs->getTargetEntity();
@@ -45,7 +49,8 @@ class QueryListener {
      *
      * @param QueryEventArgs $eventArgs
      */
-    private function executeRelationshipQueries(QueryEventArgs $eventArgs) {
+    private function executeRelationshipQueries(QueryEventArgs $eventArgs)
+    {
         $targetClass = $eventArgs->getTargetEntity();
         $entityManager = $eventArgs->getEntityManager();
         $results = $eventArgs->getResults();
@@ -68,8 +73,7 @@ class QueryListener {
                     foreach ($results as $key => $result) {
                         if (property_exists(get_class($result), $colunmName)) {
                             $value = $this->hydrator->extract($result, $colunmName);
-                            $relObject = $entityManager->getRepository($mto->targetEntity)
-                                ->findOneBy([$colunmName => $value]);
+                            $relObject = $entityManager->getRepository($mto->targetEntity)->findOneBy([$colunmName => $value]);
                             $this->hydrator->hydrate($results[$key], [$colunmName => $relObject]);
                         }
                     }
@@ -85,7 +89,8 @@ class QueryListener {
      *
      * @param QueryEventArgs $eventArgs
      */
-    private function insertParentsData(QueryEventArgs $eventArgs) {
+    private function insertParentsData(QueryEventArgs $eventArgs)
+    {
         $targetClass = $eventArgs->getTargetEntity();
         $entityManager = $eventArgs->getEntityManager();
         $results = $eventArgs->getResults();
@@ -106,8 +111,7 @@ class QueryListener {
                     foreach ($results as $key => $result) {
                         if (property_exists(get_class($result), $colunmName)) {
                             $value = $this->hydrator->extract($result, $colunmName);
-                            $relObject = $entityManager->getRepository($mto->targetEntity)
-                                ->findOneBy([$colunmName => $value]);
+                            $relObject = $entityManager->getRepository($mto->targetEntity)->findOneBy([$colunmName => $value]);
                             $this->hydrator->hydrate($results[$key], [$colunmName => $relObject]);
                         }
                     }

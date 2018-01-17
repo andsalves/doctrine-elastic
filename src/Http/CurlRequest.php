@@ -6,11 +6,12 @@ namespace DoctrineElastic\Http;
  * Class ElasticRequest
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class CurlRequest {
-
+class CurlRequest
+{
     protected $baseUrl = '';
 
-    public function request($url, $data, $method = 'POST', array $headers = null) {
+    public function request($url, $data, $method = 'POST', array $headers = null)
+    {
         try {
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -62,41 +63,28 @@ class CurlRequest {
             curl_close($ch);
 
             if (is_null($content) && in_array($httpcode, [400, 500])) {
-                return array(
-                    'status' => $httpcode,
-                    'content' => array(
-                        'error' => ['reason' => $resultJson]
-                    )
-                );
+                return array('status' => $httpcode, 'content' => array('error' => ['reason' => $resultJson]));
             }
 
-            return array(
-                'status' => $httpcode,
-                'content' => $content
-            );
+            return array('status' => $httpcode, 'content' => $content);
         } catch (\Exception $ex) {
-            return array(
-                'status' => 500,
-                'content' => array(
-                    'error' => ['reason' => $ex->getMessage()],
-                    'detail' => $ex->getTraceAsString(),
-                    'line' => $ex->getLine()
-                )
-            );
+            return array('status' => 500, 'content' => array('error' => ['reason' => $ex->getMessage()], 'detail' => $ex->getTraceAsString(), 'line' => $ex->getLine()));
         }
     }
 
     /**
      * @return string
      */
-    public function getBaseUrl() {
+    public function getBaseUrl()
+    {
         return $this->baseUrl;
     }
 
     /**
      * @param string $baseUrl
      */
-    public function setBaseUrl($baseUrl) {
+    public function setBaseUrl($baseUrl)
+    {
         $this->baseUrl = $baseUrl;
     }
 

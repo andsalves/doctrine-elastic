@@ -7,8 +7,8 @@ namespace DoctrineElastic\Elastic;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class FieldTypes {
-
+class FieldTypes
+{
     const STRING = 'string';
     const TEXT = 'text';
     const KEYWORD = 'keyword';
@@ -47,10 +47,13 @@ class FieldTypes {
         self::DATE,
         self::BOOLEAN,
         self::BINARY,
+
         self::OBJECT,
         self::NESTED,
+
         self::GEO_POINT,
         self::GEO_SHAPE,
+
         self::IP,
         self::COMPLETION,
         self::MURMUR3,

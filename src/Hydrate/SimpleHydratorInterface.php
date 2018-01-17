@@ -7,8 +7,8 @@ namespace DoctrineElastic\Hydrate;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-interface SimpleHydratorInterface {
-
+interface SimpleHydratorInterface
+{
     /**
      * @param object $entity
      * @param array|mixed $data

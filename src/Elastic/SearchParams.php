@@ -8,8 +8,8 @@ namespace DoctrineElastic\Elastic;
  * @author Andsalves     <ands.alves.nunes@gmail.com>
  * @author Allan BRUYERE <mifefr@gmail.com>
  */
-class SearchParams {
-
+class SearchParams
+{
     /* extrapolating elastic max results, ignoring elastic default as 10 */
     const DEFAULT_LIMIT_RESULTS = 1000000000;
 

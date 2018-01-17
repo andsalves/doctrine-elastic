@@ -14,13 +14,14 @@ use DoctrineElastic\Hydrate\AnnotationEntityHydrator;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class InsertListener {
-
+class InsertListener
+{
     /** @var AnnotationEntityHydrator */
     private $hydrator;
 
 
-    public function beforeInsert(EntityEventArgs $eventArgs) {
+    public function beforeInsert(EntityEventArgs $eventArgs)
+    {
         $entity = $eventArgs->getEntity();
 
         if (!is_object($entity)) {
@@ -30,11 +31,13 @@ class InsertListener {
         $this->changeEntityForManyToOneRelationships($entity);
     }
 
-    public function postInsert(EntityEventArgs $eventArgs) {
+    public function postInsert(EntityEventArgs $eventArgs)
+    {
 
     }
 
-    private function changeEntityForManyToOneRelationships($entity) {
+    private function changeEntityForManyToOneRelationships($entity)
+    {
         /** @var ManyToOne[] $relationships */
         $relationships = $this->getHydrator()->extractSpecAnnotations(get_class($entity), ManyToOne::class);
         /** @var JoinColumns[] $joinColumns */
@@ -60,17 +63,15 @@ class InsertListener {
 
             $finalValue = $this->getHydrator()->extract($relEntity, $joinColumn->referencedColumnName);
             if (is_null($finalValue)) {
-                throw new ElasticConstraintException(sprintf('Entity class %s has relationship '
-                    . "through referenced property '%s', "
-                    . 'but it is null or does not exist in %s target entity',
-                    get_class($entity), $joinColumn->referencedColumnName, get_class($relEntity)));
+                throw new ElasticConstraintException(sprintf('Entity class %s has relationship ' . "through referenced property '%s', " . 'but it is null or does not exist in %s target entity', get_class($entity), $joinColumn->referencedColumnName, get_class($relEntity)));
             }
 
             $this->getHydrator()->hydrate($entity, [$propertyName => $finalValue]);
         }
     }
 
-    private function getHydrator() {
+    private function getHydrator()
+    {
         if (is_null($this->hydrator)) {
             $this->hydrator = new AnnotationEntityHydrator();
         }

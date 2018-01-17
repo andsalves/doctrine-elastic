@@ -14,8 +14,8 @@ use Doctrine\ORM\Mapping\Annotation;
  * @Annotation
  * @Target({"PROPERTY","ANNOTATION"})
  */
-class Field implements Annotation {
-
+class Field implements Annotation
+{
     /** @var string */
     public $name;
 
@@ -43,11 +43,13 @@ class Field implements Annotation {
     /** @var mixed */
     public $null_value;
 
-    public function isValid() {
+    public function isValid()
+    {
         return is_string($this->name);
     }
 
-    public function getErrorMessage() {
+    public function getErrorMessage()
+    {
         $baseMessage = "'%s' property wasn't set in %s annotation";
 
         if (!is_string($this->name)) {
@@ -57,7 +59,8 @@ class Field implements Annotation {
         return null;
     }
 
-    public function getArrayCopy() {
+    public function getArrayCopy()
+    {
         $attrs = get_class_vars(self::class);
         $values = [];
 

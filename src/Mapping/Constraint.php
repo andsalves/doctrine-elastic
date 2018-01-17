@@ -13,19 +13,19 @@ use Doctrine\ORM\Mapping\Annotation;
  * @Annotation
  * @Target("PROPERTY")
  */
-final class Constraint implements Annotation {
-
+final class Constraint implements Annotation
+{
     const UNIQUE_VALUE = 'UniqueValue';
 
     const MATCH_LENGTH = 'MatchLength';
     const MAX_LENGTH = 'MaxLength';
     const MIN_LENGTH = 'MinLength';
 
-    public static $operators = array(
+    public static $operators = [
         Constraint::MATCH_LENGTH => '==',
         Constraint::MAX_LENGTH => '<=',
         Constraint::MIN_LENGTH => '=>',
-    );
+    ];
 
     public $type;
 

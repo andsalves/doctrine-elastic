@@ -7,6 +7,7 @@ namespace DoctrineElastic\Listener;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class DeleteListener {
+class DeleteListener
+{
 
 }

@@ -3,6 +3,7 @@
 namespace DoctrineElastic\Exception;
 
 
-class ElasticConstraintException extends \Exception {
+class ElasticConstraintException extends \Exception
+{
 
 }

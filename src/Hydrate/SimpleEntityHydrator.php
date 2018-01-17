@@ -11,14 +11,15 @@ use Doctrine\ORM\Mapping\Reflection\ReflectionPropertiesGetter;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class SimpleEntityHydrator implements SimpleHydratorInterface {
-
+class SimpleEntityHydrator implements SimpleHydratorInterface
+{
     /**
      * @var ReflectionPropertiesGetter
      */
     protected $reflectionPropertiesGetter;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->reflectionPropertiesGetter = new ReflectionPropertiesGetter(new RuntimeReflectionService());
     }
 
@@ -27,7 +28,8 @@ class SimpleEntityHydrator implements SimpleHydratorInterface {
      * @param array $data
      * @return object
      */
-    public function hydrate($entity, array $data) {
+    public function hydrate($entity, array $data)
+    {
         $classProperties = $this->reflectionPropertiesGetter->getProperties(get_class($entity));
 
         foreach ($classProperties as $prop) {
@@ -43,11 +45,11 @@ class SimpleEntityHydrator implements SimpleHydratorInterface {
                 }
             }
         }
-        
+
         if (method_exists($entity, 'exchangeArray')) {
             $entity->exchangeArray($data);
         }
-        
+
         if (method_exists($entity, 'populate')) {
             $entity->populate($data);
         }
@@ -60,7 +62,8 @@ class SimpleEntityHydrator implements SimpleHydratorInterface {
      * @param string|array $fieldOrFields
      * @return array|mixed
      */
-    public function extract($entity, $fieldOrFields = null) {
+    public function extract($entity, $fieldOrFields = null)
+    {
         $filterFields = null;
         $data = [];
         /** @var \ReflectionProperty[] $classProperties */
@@ -85,10 +88,7 @@ class SimpleEntityHydrator implements SimpleHydratorInterface {
 
             $decamelName = self::decamelizeString($prop->name);
 
-            if ($decamelName == $fieldOrFields
-                || $prop->name == $fieldOrFields
-                || $prop->name == self::camelizeString($fieldOrFields)
-            ) {
+            if ($decamelName == $fieldOrFields || $prop->name == $fieldOrFields || $prop->name == self::camelizeString($fieldOrFields)) {
                 return $value;
             }
 
@@ -102,7 +102,8 @@ class SimpleEntityHydrator implements SimpleHydratorInterface {
         return $data;
     }
 
-    public static function decamelizeString($string) {
+    public static function decamelizeString($string)
+    {
         if (is_string($string) && !empty($string)) {
             $prefix = '';
             if (substr($string, 0, 1) == '_') {
@@ -115,7 +116,8 @@ class SimpleEntityHydrator implements SimpleHydratorInterface {
         return $string;
     }
 
-    public static function camelizeString($string) {
+    public static function camelizeString($string)
+    {
         if (is_string($string) && !empty($string)) {
             if (substr($string, 0, 1) == '_') {
                 $string = substr($string, 1);

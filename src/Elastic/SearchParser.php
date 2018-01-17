@@ -7,18 +7,19 @@ namespace DoctrineElastic\Elastic;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class SearchParser {
-
+class SearchParser
+{
     /**
      * @param SearchParams $searchParams
      * @return array
      */
-    public static function parseSearchParams(SearchParams $searchParams) {
-        $elasticQuerySearch = array(
+    public static function parseSearchParams(SearchParams $searchParams)
+    {
+        $elasticQuerySearch = [
             'index' => $searchParams->getIndex(),
             'type' => $searchParams->getType(),
             'body' => $searchParams->getBody()
-        );
+        ];
 
         if (boolval($searchParams->getParent()) && is_string($searchParams->getParent())) {
             $elasticQuerySearch['routing'] = $searchParams->getParent();

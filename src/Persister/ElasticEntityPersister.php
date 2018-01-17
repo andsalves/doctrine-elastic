@@ -27,8 +27,8 @@ use DoctrineElastic\Query\Walker\OperatorsMap;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class ElasticEntityPersister {
-
+class ElasticEntityPersister
+{
     /** @var array */
     protected $queuedInserts = [];
 
@@ -53,7 +53,8 @@ class ElasticEntityPersister {
     /** @var WalkerHelper */
     private $walkerHelper;
 
-    public function __construct(ElasticEntityManager $em, $className) {
+    public function __construct(ElasticEntityManager $em, $className)
+    {
         $this->className = $className;
         $this->annotationReader = new AnnotationReader();
         $this->queryExecutor = new ElasticQueryExecutor($em);
@@ -63,7 +64,8 @@ class ElasticEntityPersister {
         $this->walkerHelper = new WalkerHelper();
     }
 
-    public function getReflectionClass() {
+    public function getReflectionClass()
+    {
         if (is_null($this->reflectionClass)) {
             $this->reflectionClass = new \ReflectionClass($this->className);
         }
@@ -71,13 +73,13 @@ class ElasticEntityPersister {
         return $this->reflectionClass;
     }
 
-    private function validateEntity() {
+    private function validateEntity()
+    {
         $type = $this->annotationReader->getClassAnnotation($this->getReflectionClass(), Type::class);
         $className = $this->className;
 
         if (!($type instanceof Type)) {
-            throw new AnnotationException(sprintf('%s annotation is missing for %s entity class',
-                Type::class, get_class()));
+            throw new AnnotationException(sprintf('%s annotation is missing for %s entity class', Type::class, get_class()));
         }
 
         if (!$type->isValid()) {
@@ -94,7 +96,8 @@ class ElasticEntityPersister {
         }
     }
 
-    public function loadAll(array $criteria = [], array $orderBy = null, $limit = null, $offset = null) {
+    public function loadAll(array $criteria = [], array $orderBy = null, $limit = null, $offset = null)
+    {
         $type = $this->getEntityType();
         $sort = [];
         $body = ['query' => ['bool' => ['must' => []]]];
@@ -113,17 +116,14 @@ class ElasticEntityPersister {
             }
 
             if (is_null($annotation)) {
-                $msg = sprintf("field/metafield for column '%s' doesn't exist in %s entity class",
-                    $columnName, $this->className);
+                $msg = sprintf("field/metafield for column '%s' doesn't exist in %s entity class", $columnName, $this->className);
                 throw new InvalidParamsException($msg);
             }
 
             if ($annotation->name === '_parent') {
                 $searchParams->setParent($criteria[$columnName]);
             } else {
-                $this->walkerHelper->addBodyStatement(
-                    $annotation->name, OperatorsMap::EQ, $criteria[$columnName], $body
-                );
+                $this->walkerHelper->addBodyStatement($annotation->name, OperatorsMap::EQ, $criteria[$columnName], $body);
             }
         }
 
@@ -147,17 +147,17 @@ class ElasticEntityPersister {
         return $this->queryExecutor->execute($searchParams, $this->className);
     }
 
-    public function getAnnotionReader() {
+    public function getAnnotionReader()
+    {
         return $this->annotationReader;
     }
 
-    public function executeInserts() {
+    public function executeInserts()
+    {
         foreach ($this->queuedInserts as $entity) {
             $type = $this->getEntityType();
 
-            $this->em->getEventManager()->dispatchEvent(
-                DoctrineElasticEvents::beforeInsert, new EntityEventArgs($entity)
-            );
+            $this->em->getEventManager()->dispatchEvent(DoctrineElasticEvents::beforeInsert, new EntityEventArgs($entity));
 
             $fieldsData = $this->hydrator->extractWithAnnotation($entity, Field::class);
             $metaFieldsData = $this->hydrator->extractWithAnnotation($entity, MetaField::class);
@@ -176,19 +176,13 @@ class ElasticEntityPersister {
             $this->checkConstraints($entity);
             $return = [];
 
-            $inserted = $this->em->getConnection()->insert(
-                $type->getIndex(), $type->getName(), $fieldsData, $mergeParams, $return
-            );
+            $inserted = $this->em->getConnection()->insert($type->getIndex(), $type->getName(), $fieldsData, $mergeParams, $return);
 
             if ($inserted) {
                 $this->hydrateEntityByResult($entity, $return);
-                $this->em->getEventManager()->dispatchEvent(
-                    DoctrineElasticEvents::postInsert, new EntityEventArgs($entity)
-                );
+                $this->em->getEventManager()->dispatchEvent(DoctrineElasticEvents::postInsert, new EntityEventArgs($entity));
             } else {
-                throw new ElasticOperationException(sprintf(
-                    'Unable to complete insert operation: %s', $this->em->getConnection()->getError()
-                ));
+                throw new ElasticOperationException(sprintf('Unable to complete insert operation: %s', $this->em->getConnection()->getError()));
             }
         }
     }
@@ -199,7 +193,8 @@ class ElasticEntityPersister {
      * @throws ElasticConstraintException
      * @throws ElasticOperationException
      */
-    private function createTypeIfNotExists(Type $type, $className) {
+    private function createTypeIfNotExists(Type $type, $className)
+    {
         foreach ($type->getChildClasses() as $childClass) {
             $this->createTypeIfNotExists($this->getEntityType($childClass), $childClass);
         }
@@ -227,11 +222,7 @@ class ElasticEntityPersister {
                 }
             }
 
-            $mappings = array(
-                $typeName => array(
-                    'properties' => $propertiesMapping
-                )
-            );
+            $mappings = array($typeName => array('properties' => $propertiesMapping));
 
             if ($type->getParentClass()) {
                 $refParentClass = new \ReflectionClass($type->getParentClass());
@@ -252,9 +243,7 @@ class ElasticEntityPersister {
             }
 
             if (!$created) {
-                throw new ElasticOperationException(
-                    'Unable to create index or type: ' . $this->em->getConnection()->getError()
-                );
+                throw new ElasticOperationException('Unable to create index or type: ' . $this->em->getConnection()->getError());
             }
         }
     }
@@ -265,7 +254,8 @@ class ElasticEntityPersister {
      * @param object $entity
      * @throws ElasticConstraintException
      */
-    private function checkConstraints($entity) {
+    private function checkConstraints($entity)
+    {
         /** @var Constraint[] $constraintAnnotations */
         $constraintAnnotations = $this->hydrator->extractSpecAnnotations($this->className, Constraint::class);
 
@@ -278,10 +268,8 @@ class ElasticEntityPersister {
                         $element = $this->load([$property => $value]);
 
                         if (boolval($element)) {
-                            $messageError = sprintf(
-                                "Unique field %s already has a document with value '%s'", $property, $value
-                            );
-                            
+                            $messageError = sprintf("Unique field %s already has a document with value '%s'", $property, $value);
+
                             if ($annotation->options) {
                                 $messageError = array_key_exists('message', $annotation->options) ? $annotation->options['message'] : $messageError;
                             }
@@ -302,10 +290,7 @@ class ElasticEntityPersister {
                             $operator = Constraint::$operators[$annotation->type];
 
                             if (!eval(sprintf('%s %s %s', $length, $operator, $baseLength))) {
-                                throw new ElasticConstraintException(sprintf(
-                                    "Length for column %s must be %s %s. Current length: %s",
-                                    $property, $operator, $baseLength, $length
-                                ));
+                                throw new ElasticConstraintException(sprintf("Length for column %s must be %s %s. Current length: %s", $property, $operator, $baseLength, $length));
                             }
                         }
                     }
@@ -315,7 +300,8 @@ class ElasticEntityPersister {
         }
     }
 
-    public function load(array $criteria, $limit = null, array $orderBy = null) {
+    public function load(array $criteria, $limit = null, array $orderBy = null)
+    {
         $results = $this->loadAll($criteria, $orderBy, $limit);
 
         return count($results) ? $results[0] : null;
@@ -326,7 +312,8 @@ class ElasticEntityPersister {
      * @return Type
      * @throws MappingException
      */
-    public function getEntityType($className = null) {
+    public function getEntityType($className = null)
+    {
         if (boolval($className)) {
             $refClass = new \ReflectionClass($className);
         } else {
@@ -342,7 +329,8 @@ class ElasticEntityPersister {
         }
     }
 
-    private function hydrateEntityByResult($entity, array $searchResult) {
+    private function hydrateEntityByResult($entity, array $searchResult)
+    {
         if (isset($searchResult['_source'])) {
             $searchResult = array_merge($searchResult, $searchResult['_source']);
         }
@@ -352,31 +340,30 @@ class ElasticEntityPersister {
         return $entity;
     }
 
-    public function update($entity) {
+    public function update($entity)
+    {
         $type = $this->getEntityType();
         $dataUpdate = $this->hydrator->extractWithAnnotation($entity, Field::class);
         $_id = $this->hydrator->extract($entity, '_id');
         $return = [];
 
-        $updated = $this->em->getConnection()->update(
-            $type->getIndex(), $type->getName(), $_id, $dataUpdate, [], $return
-        );
+        $updated = $this->em->getConnection()->update($type->getIndex(), $type->getName(), $_id, $dataUpdate, [], $return);
 
         if ($updated) {
             $this->hydrateEntityByResult($entity, $return);
         } else {
-            throw new ElasticOperationException(sprintf(
-                'Unable to complete update operation: %s ', $this->em->getConnection()->getError()
-            ));
+            throw new ElasticOperationException(sprintf('Unable to complete update operation: %s ', $this->em->getConnection()->getError()));
         }
     }
 
-    public function addInsert($entity) {
+    public function addInsert($entity)
+    {
         $oid = spl_object_hash($entity);
         $this->queuedInserts[$oid] = $entity;
     }
 
-    public function loadById(array $_idArray, $entity = null) {
+    public function loadById(array $_idArray, $entity = null)
+    {
         $type = $this->getEntityType();
 
         if (is_object($entity) && get_class($entity) != $this->className) {
@@ -397,21 +384,18 @@ class ElasticEntityPersister {
         return null;
     }
 
-    public function delete($entity) {
+    public function delete($entity)
+    {
         $type = $this->getEntityType();
         $return = [];
         $_id = $this->hydrator->extract($entity, '_id');
 
-        $deletion = $this->em->getConnection()->delete(
-            $type->getIndex(), $type->getName(), $_id, [], $return
-        );
+        $deletion = $this->em->getConnection()->delete($type->getIndex(), $type->getName(), $_id, [], $return);
 
         if ($deletion) {
             return true;
         } else {
-            throw new ElasticOperationException(sprintf(
-                'Unable to complete delete operation: %s', $this->em->getConnection()->getError()
-            ));
+            throw new ElasticOperationException(sprintf('Unable to complete delete operation: %s', $this->em->getConnection()->getError()));
         }
     }
 }

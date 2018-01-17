@@ -10,8 +10,8 @@ use DoctrineElastic\ElasticEntityManager;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class QueryEventArgs extends EventArgs {
-
+class QueryEventArgs extends EventArgs
+{
     /** @var array */
     protected $results;
 
@@ -22,40 +22,46 @@ class QueryEventArgs extends EventArgs {
     protected $targetEntity;
 
     /** @return array */
-    public function getResults() {
+    public function getResults()
+    {
         return $this->results;
     }
 
     /** @param array $results */
-    public function setResults(&$results) {
+    public function setResults(&$results)
+    {
         $this->results = $results;
     }
 
     /**
      * @return ElasticEntityManager
      */
-    public function getEntityManager() {
+    public function getEntityManager()
+    {
         return $this->entityManager;
     }
 
     /**
      * @param ElasticEntityManager $entityManager
      */
-    public function setEntityManager($entityManager) {
+    public function setEntityManager($entityManager)
+    {
         $this->entityManager = $entityManager;
     }
 
     /**
      * @return string
      */
-    public function getTargetEntity() {
+    public function getTargetEntity()
+    {
         return $this->targetEntity;
     }
 
     /**
      * @param string $targetEntity
      */
-    public function setTargetEntity($targetEntity) {
+    public function setTargetEntity($targetEntity)
+    {
         $this->targetEntity = $targetEntity;
     }
 
