@@ -3,6 +3,7 @@
 namespace DoctrineElastic\Exception;
 
 
-class InvalidOperatorException extends \Exception {
+class InvalidOperatorException extends \Exception
+{
 
 }

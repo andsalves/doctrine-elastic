@@ -5,10 +5,11 @@ namespace DoctrineElastic\Elastic;
 /**
  * Entity class for representation of Elasticsearch api search query
  *
- * @author
+ * @author Andsalves     <ands.alves.nunes@gmail.com>
+ * @author Allan BRUYERE <mifefr@gmail.com>
  */
-class SearchParams {
-
+class SearchParams
+{
     /* extrapolating elastic max results, ignoring elastic default as 10 */
     const DEFAULT_LIMIT_RESULTS = 1000000000;
 
@@ -26,10 +27,13 @@ class SearchParams {
 
     protected $sort = [];
 
+    protected $aggregate = [];
+
     /**
      * @return string
      */
-    public function getIndex() {
+    public function getIndex()
+    {
         return $this->index;
     }
 
@@ -37,15 +41,18 @@ class SearchParams {
      * @param string $index
      * @return SearchParams
      */
-    public function setIndex($index) {
+    public function setIndex($index)
+    {
         $this->index = $index;
+
         return $this;
     }
 
     /**
      * @return string
      */
-    public function getType() {
+    public function getType()
+    {
         return $this->type;
     }
 
@@ -53,7 +60,8 @@ class SearchParams {
      * @param string $type
      * @return SearchParams
      */
-    public function setType($type) {
+    public function setType($type)
+    {
         $this->type = $type;
         return $this;
     }
@@ -61,7 +69,8 @@ class SearchParams {
     /**
      * @return array
      */
-    public function getBody() {
+    public function getBody()
+    {
         return $this->body;
     }
 
@@ -69,15 +78,18 @@ class SearchParams {
      * @param array $body
      * @return SearchParams
      */
-    public function setBody(array $body = []) {
+    public function setBody(array $body = [])
+    {
         $this->body = $body;
+
         return $this;
     }
 
     /**
      * @return int
      */
-    public function getSize() {
+    public function getSize()
+    {
         return $this->size;
     }
 
@@ -85,15 +97,18 @@ class SearchParams {
      * @param int $size
      * @return SearchParams
      */
-    public function setSize($size) {
+    public function setSize($size)
+    {
         $this->size = $size;
+
         return $this;
     }
 
     /**
-     * @return mixed
+     * @return array
      */
-    public function getSort() {
+    public function getSort()
+    {
         return $this->sort;
     }
 
@@ -101,15 +116,18 @@ class SearchParams {
      * @param array $sort
      * @return SearchParams
      */
-    public function setSort(array $sort = []) {
+    public function setSort(array $sort = [])
+    {
         $this->sort = $sort;
+
         return $this;
     }
 
     /**
      * @return int
      */
-    public function getFrom() {
+    public function getFrom()
+    {
         return $this->from;
     }
 
@@ -117,15 +135,18 @@ class SearchParams {
      * @param int $from
      * @return SearchParams
      */
-    public function setFrom($from) {
+    public function setFrom($from)
+    {
         $this->from = $from;
+
         return $this;
     }
 
     /**
      * @return mixed
      */
-    public function getParent() {
+    public function getParent()
+    {
         return $this->parent;
     }
 
@@ -133,13 +154,37 @@ class SearchParams {
      * @param mixed $parent
      * @return SearchParams
      */
-    public function setParent($parent) {
+    public function setParent($parent)
+    {
         $this->parent = $parent;
+
         return $this;
     }
 
+    /**
+     * @return array
+     */
+    public function getAggregate()
+    {
+        return $this->aggregate;
+    }
 
-    public function isValid() {
+    /**
+     * @param array $aggregate
+     * @return SearchParams
+     */
+    public function setAggregate($aggregate)
+    {
+        $this->aggregate = $aggregate;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isValid()
+    {
         return boolval($this->index);
     }
 }

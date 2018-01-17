@@ -13,8 +13,8 @@ use DoctrineElastic\Mapping as ElasticORM;
  * @ElasticORM\Type(name="foo_type", index="foo_index")
  * @ORM\Entity
  */
-class FooType {
-
+class FooType
+{
     /**
      * @var string
      *
@@ -49,7 +49,8 @@ class FooType {
     /**
      * @return int
      */
-    public function getCustomNumericField() {
+    public function getCustomNumericField()
+    {
         return $this->customNumericField;
     }
 
@@ -57,7 +58,8 @@ class FooType {
      * @param int $customNumericField
      * @return FooType
      */
-    public function setCustomNumericField($customNumericField) {
+    public function setCustomNumericField($customNumericField)
+    {
         $this->customNumericField = $customNumericField;
         return $this;
     }
@@ -65,7 +67,8 @@ class FooType {
     /**
      * @return string
      */
-    public function getCustomField() {
+    public function getCustomField()
+    {
         return $this->customField;
     }
 
@@ -73,7 +76,8 @@ class FooType {
      * @param string $customField
      * @return FooType
      */
-    public function setCustomField($customField) {
+    public function setCustomField($customField)
+    {
         $this->customField = $customField;
         return $this;
     }
@@ -81,7 +85,8 @@ class FooType {
     /**
      * @return array
      */
-    public function getCustomNestedField() {
+    public function getCustomNestedField()
+    {
         return $this->customNestedField;
     }
 
@@ -89,7 +94,8 @@ class FooType {
      * @param array $customNestedField
      * @return FooType
      */
-    public function setCustomNestedField($customNestedField) {
+    public function setCustomNestedField($customNestedField)
+    {
         $this->customNestedField = $customNestedField;
         return $this;
     }

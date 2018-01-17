@@ -13,16 +13,18 @@ use Doctrine\ORM\Mapping\Annotation;
  * @Annotation
  * @Target({"PROPERTY","ANNOTATION"})
  */
-class MetaField implements Annotation {
-
+class MetaField implements Annotation
+{
     /** @var string */
     public $name;
 
-    public function isValid() {
+    public function isValid()
+    {
         return is_string($this->name);
     }
 
-    public function getErrorMessage() {
+    public function getErrorMessage()
+    {
         $baseMessage = "'%s' property wasn't set in %s annotation";
 
         if (!is_string($this->name)) {

@@ -12,8 +12,8 @@ use DoctrineElastic\Mapping as ElasticORM;
  * @ElasticORM\Type(name="foo_parent", index="foo_family", childClasses={"DoctrineElastic\Entity\FooChild"})
  * @ORM\Entity
  */
-class FooParent {
-
+class FooParent
+{
     /**
      * @var string
      * @ElasticORM\MetaField(name="_id")
@@ -39,7 +39,8 @@ class FooParent {
     /**
      * @return string
      */
-    public function getName() {
+    public function getName()
+    {
         return $this->name;
     }
 
@@ -47,7 +48,8 @@ class FooParent {
      * @param string $name
      * @return FooParent
      */
-    public function setName($name) {
+    public function setName($name)
+    {
         $this->name = $name;
         return $this;
     }
@@ -55,7 +57,8 @@ class FooParent {
     /**
      * @return string
      */
-    public function getAge() {
+    public function getAge()
+    {
         return $this->age;
     }
 
@@ -63,7 +66,8 @@ class FooParent {
      * @param string $age
      * @return FooParent
      */
-    public function setAge($age) {
+    public function setAge($age)
+    {
         $this->age = $age;
         return $this;
     }

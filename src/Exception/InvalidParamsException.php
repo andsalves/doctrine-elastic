@@ -3,6 +3,7 @@
 namespace DoctrineElastic\Exception;
 
 
-class InvalidParamsException extends \Exception {
+class InvalidParamsException extends \Exception
+{
 
 }

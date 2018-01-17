@@ -9,15 +9,16 @@ use DoctrineElastic\ElasticEntityManager;
 /**
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class ElasticEntityRepository implements ObjectRepository {
-
+class ElasticEntityRepository implements ObjectRepository
+{
     /** @var string */
     protected $_entityName;
 
     /** @var ElasticEntityManager */
     protected $_em;
 
-    public function __construct(ElasticEntityManager $em, $className) {
+    public function __construct(ElasticEntityManager $em, $className)
+    {
         $this->_entityName = $className;
         $this->_em = $em;
     }
@@ -29,7 +30,8 @@ class ElasticEntityRepository implements ObjectRepository {
      *
      * @return object The object.
      */
-    public function find($id) {
+    public function find($id)
+    {
         return $this->_em->find($this->_entityName, $id, null, null);
     }
 
@@ -38,7 +40,8 @@ class ElasticEntityRepository implements ObjectRepository {
      *
      * @return array The objects.
      */
-    public function findAll() {
+    public function findAll()
+    {
         return $this->findBy([]);
     }
 
@@ -58,7 +61,8 @@ class ElasticEntityRepository implements ObjectRepository {
      *
      * @throws \UnexpectedValueException
      */
-    public function findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null) {
+    public function findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+    {
         $persister = $this->_em->getUnitOfWork()->getEntityPersister($this->_entityName);
 
         return $persister->loadAll($criteria, $orderBy, $limit, $offset);
@@ -71,7 +75,8 @@ class ElasticEntityRepository implements ObjectRepository {
      * @param array $orderBy
      * @return object The object.
      */
-    public function findOneBy(array $criteria, array $orderBy = null) {
+    public function findOneBy(array $criteria, array $orderBy = null)
+    {
         $persister = $this->_em->getUnitOfWork()->getEntityPersister($this->_entityName);
 
         return $persister->load($criteria, 1, $orderBy);
@@ -82,7 +87,8 @@ class ElasticEntityRepository implements ObjectRepository {
      *
      * @return string
      */
-    public function getClassName() {
+    public function getClassName()
+    {
         return $this->_entityName;
     }
 
@@ -92,11 +98,13 @@ class ElasticEntityRepository implements ObjectRepository {
      * @param string $alias
      * @param string $indexBy The index for the from.
      *
-     * @return ElasticQueryBuilder
+     * @return \Doctrine\ORM\QueryBuilder
      */
-    public function createQueryBuilder($alias, $indexBy = null) {
-        return $this->_em->createQueryBuilder()
-            ->select($alias)
-            ->from($this->_entityName, $alias, $indexBy);
+    public function createQueryBuilder($alias, $indexBy = null)
+    {
+        return $this->_em
+                    ->createQueryBuilder()
+                    ->select($alias)
+                    ->from($this->_entityName, $alias, $indexBy);
     }
 }

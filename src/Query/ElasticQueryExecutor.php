@@ -16,15 +16,16 @@ use DoctrineElastic\Mapping\MetaField;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class ElasticQueryExecutor {
-
+class ElasticQueryExecutor
+{
     /** @var AnnotationEntityHydrator */
     private $_hydrator;
 
     /** @var ElasticEntityManager */
     private $_eem;
 
-    public function __construct(ElasticEntityManager $elasticEntityManager) {
+    public function __construct(ElasticEntityManager $elasticEntityManager)
+    {
         $this->_eem = $elasticEntityManager;
         $this->_hydrator = new AnnotationEntityHydrator();
     }
@@ -37,7 +38,8 @@ class ElasticQueryExecutor {
      * @param $entityClass
      * @return array
      */
-    public function execute(SearchParams $searchParams, $entityClass) {
+    public function execute(SearchParams $searchParams, $entityClass)
+    {
         if (!$searchParams->isValid()) {
             throw new \InvalidArgumentException('Elastic search params are invalid for request. ');
         }
@@ -58,7 +60,8 @@ class ElasticQueryExecutor {
         return $results;
     }
 
-    private function hydrateEntityWith($entity, array $rawData) {
+    private function hydrateEntityWith($entity, array $rawData)
+    {
         // $this->_hydrator->hydrateByAnnotation($entity, Field::class, $rawData);
         // $this->_hydrator->hydrateByAnnotation($entity, MetaField::class, $rawData);
 
@@ -66,24 +69,20 @@ class ElasticQueryExecutor {
             $rawData['_source']['_id'] = $rawData['_id'];
             $this->hydrateEntityWith($entity, $rawData['_source']);
         }
-        
+
         $this->_hydrator->hydrate($entity, $rawData);
 
         return $entity;
     }
 
-    private function fetchElasticResult(SearchParams $searchParams) {
+    private function fetchElasticResult(SearchParams $searchParams)
+    {
         $results = [];
         $connection = $this->_eem->getConnection();
 
         if ($connection->indexExists($searchParams->getIndex())) {
             $arrayParams = SearchParser::parseSearchParams($searchParams);
-            $results = $connection->search(
-                $arrayParams['index'], $arrayParams['type'], $arrayParams['body'], array(
-                    'size' => $searchParams->getSize(),
-                    'from' => $searchParams->getFrom()
-                )
-            );
+            $results = $connection->search($arrayParams['index'], $arrayParams['type'], $arrayParams['body'], array('size' => $searchParams->getSize(), 'from' => $searchParams->getFrom()));
         }
 
         return $results;
@@ -93,7 +92,8 @@ class ElasticQueryExecutor {
      * @param $entityClass
      * @return QueryEventArgs
      */
-    private function createEventArgs($entityClass) {
+    private function createEventArgs($entityClass)
+    {
         $eventArgs = new QueryEventArgs();
         $eventArgs->setTargetEntity($entityClass);
         $eventArgs->setEntityManager($this->_eem);

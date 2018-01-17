@@ -12,12 +12,13 @@ use DoctrineElastic\Mapping\Field;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class AnnotationEntityHydrator extends SimpleEntityHydrator {
-
+class AnnotationEntityHydrator extends SimpleEntityHydrator
+{
     /** @var AnnotationReader */
     protected $annotationReader;
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
         $this->annotationReader = new AnnotationReader();
     }
@@ -26,19 +27,18 @@ class AnnotationEntityHydrator extends SimpleEntityHydrator {
      * Extract fields with specified annotation
      *
      * @param $entity
-     * @param null $specAnnotationClass
+     * @param string $specAnnotationClass
      * @return array
      */
-    public function extractWithAnnotation($entity, $specAnnotationClass = Field::class) {
+    public function extractWithAnnotation($entity, $specAnnotationClass = Field::class)
+    {
         $properties = $this->reflectionPropertiesGetter->getProperties(get_class($entity));
         $values = $this->extract($entity);
         $data = [];
 
         foreach ($properties as $prop) {
             /** @var Annotation|Field $specAnnotation */
-            $specAnnotation = $this->annotationReader->getPropertyAnnotation(
-                $prop, $specAnnotationClass
-            );
+            $specAnnotation = $this->annotationReader->getPropertyAnnotation($prop, $specAnnotationClass);
 
             $name = self::decamelizeString($prop->name);
 
@@ -56,7 +56,8 @@ class AnnotationEntityHydrator extends SimpleEntityHydrator {
      * @param array $data
      * @return object
      */
-    public function hydrateByAnnotation($entity, $annotationClass, array $data) {
+    public function hydrateByAnnotation($entity, $annotationClass, array $data)
+    {
         /** @var Annotation $annotations */
         $annotations = $this->extractSpecAnnotations(get_class($entity), $annotationClass);
         $dataAnnotations = [];
@@ -81,15 +82,14 @@ class AnnotationEntityHydrator extends SimpleEntityHydrator {
      * @param string $specAnnotationClass
      * @return array|\Doctrine\ORM\Mapping\Annotation[] {$specAnnotationClass}[]
      */
-    public function extractSpecAnnotations($entityClass, $specAnnotationClass) {
+    public function extractSpecAnnotations($entityClass, $specAnnotationClass)
+    {
         $properties = $this->reflectionPropertiesGetter->getProperties($entityClass);
         $annotations = [];
 
         foreach ($properties as $prop) {
             /** @var Annotation $specAnnotation */
-            $specAnnotation = $this->annotationReader->getPropertyAnnotation(
-                $prop, $specAnnotationClass
-            );
+            $specAnnotation = $this->annotationReader->getPropertyAnnotation($prop, $specAnnotationClass);
 
             if ($specAnnotation) {
                 $annotations[$prop->name] = $specAnnotation;

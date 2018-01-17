@@ -13,8 +13,8 @@ use DoctrineElastic\Elastic\ElasticQuery;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class QueryParser {
-
+class QueryParser
+{
     /** @var ElasticQuery */
     protected $query;
 
@@ -24,7 +24,8 @@ class QueryParser {
     /** @var Parser */
     private $doctrineParser;
 
-    public function __construct(ElasticQuery $query) {
+    public function __construct(ElasticQuery $query)
+    {
         $this->query = $query;
 
         $doctrineQuery = new Query(new GetConfigurationEntityManager($query->getEntityManager()));
@@ -32,7 +33,8 @@ class QueryParser {
         $this->doctrineParser = new Parser($doctrineQuery);
     }
 
-    public function getAST() {
+    public function getAST()
+    {
         if (is_null($this->_ast)) {
             $this->_ast = $this->doctrineParser->QueryLanguage();
         }
@@ -45,7 +47,8 @@ class QueryParser {
      *
      * @return \DoctrineElastic\Elastic\SearchParams
      */
-    public function parseElasticQuery() {
+    public function parseElasticQuery()
+    {
         $outputWalker = new ElasticWalker($this->query, $this->getAST(), $this->getRootClass());
 
         return $outputWalker->walkSelectStatement();
@@ -54,7 +57,8 @@ class QueryParser {
     /**
      * @return string
      */
-    public function getRootClass() {
+    public function getRootClass()
+    {
         /** @var \Doctrine\ORM\Query\AST\IdentificationVariableDeclaration[] $identificationVariableDeclarations */
         $identificationVariableDeclarations = $this->getAST()->fromClause->identificationVariableDeclarations;
 

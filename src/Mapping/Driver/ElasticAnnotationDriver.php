@@ -10,9 +10,10 @@ use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class ElasticAnnotationDriver extends AnnotationDriver {
-
-    public function loadMetadataForClass($className, ClassMetadata $metadata) {
+class ElasticAnnotationDriver extends AnnotationDriver
+{
+    public function loadMetadataForClass($className, ClassMetadata $metadata)
+    {
         /* @var $metadata \Doctrine\ORM\Mapping\ClassMetadataInfo */
         $idGeneratorType = $metadata->generatorType;
 

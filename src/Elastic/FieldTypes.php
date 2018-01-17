@@ -7,8 +7,8 @@ namespace DoctrineElastic\Elastic;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class FieldTypes {
-
+class FieldTypes
+{
     const STRING = 'string';
     const TEXT = 'text';
     const KEYWORD = 'keyword';
@@ -34,7 +34,7 @@ class FieldTypes {
     const ATTACHMENT = 'attachment';
 
 
-    public static $types = array(
+    public static $types = [
         self::STRING,
         self::TEXT,
         self::KEYWORD,
@@ -47,13 +47,16 @@ class FieldTypes {
         self::DATE,
         self::BOOLEAN,
         self::BINARY,
+
         self::OBJECT,
         self::NESTED,
+
         self::GEO_POINT,
         self::GEO_SHAPE,
+
         self::IP,
         self::COMPLETION,
         self::MURMUR3,
         self::ATTACHMENT
-    );
+    ];
 }

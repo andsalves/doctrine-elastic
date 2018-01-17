@@ -18,8 +18,8 @@ use DoctrineElastic\Query\Walker\WhereWalker;
  *
  * @uahtor Ands
  */
-class ElasticWalker {
-
+class ElasticWalker
+{
     /** @var ElasticQuery */
     protected $query;
 
@@ -32,7 +32,8 @@ class ElasticWalker {
     /** @var SelectStatement */
     private $_ast;
 
-    public function __construct(ElasticQuery $query, SelectStatement $AST, $className) {
+    public function __construct(ElasticQuery $query, SelectStatement $AST, $className)
+    {
         $this->query = $query;
         $this->walkerHelper = new WalkerHelper();
         $this->_ast = $AST;
@@ -42,7 +43,8 @@ class ElasticWalker {
     /**
      * @return SearchParams
      */
-    public function walkSelectStatement() {
+    public function walkSelectStatement()
+    {
         $searchParams = new SearchParams();
         $size = $this->query->getMaxResults();
         $offset = $this->query->getFirstResult();
@@ -67,12 +69,14 @@ class ElasticWalker {
         return $searchParams;
     }
 
-    private function walkWhereClause(WhereClause $whereClause, SearchParams $searchParams) {
+    private function walkWhereClause(WhereClause $whereClause, SearchParams $searchParams)
+    {
         $whereWalker = new WhereWalker($this->query, $this->_className, $this->walkerHelper);
         $whereWalker->walk($whereClause, $searchParams);
     }
 
-    private function walkOrderByClause(OrderByClause $orderByClause, SearchParams $searchParams) {
+    private function walkOrderByClause(OrderByClause $orderByClause, SearchParams $searchParams)
+    {
         $sort = [];
 
         /** @var OrderByItem $item */
@@ -98,10 +102,11 @@ class ElasticWalker {
      * @param $className
      * @return Field
      */
-    private function getEntityElasticField($propertyName, $className) {
+    private function getEntityElasticField($propertyName, $className)
+    {
         /** @var Field[] $fields */
         $fields = (new AnnotationEntityHydrator())->extractSpecAnnotations($className, Field::class);
 
-        return isset($fields[$propertyName]) ? $fields[$propertyName]: null;
+        return isset($fields[$propertyName]) ? $fields[$propertyName] : null;
     }
 }

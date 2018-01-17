@@ -13,20 +13,22 @@ use DoctrineElastic\ElasticEntityManager;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-abstract class AbstractEntityPersister implements EntityPersister {
-
+abstract class AbstractEntityPersister implements EntityPersister
+{
     /** @var \Doctrine\ORM\Mapping\QuoteStrategy */
     protected $quoteStrategy;
 
     /** @var ElasticEntityManager */
     protected $em;
 
-    public function __construct(EntityManagerInterface $em) {
+    public function __construct(EntityManagerInterface $em)
+    {
         $this->em = $em;
         $this->quoteStrategy = $this->em->getConfiguration()->getQuoteStrategy();
     }
 
-    public function getClassMetadata() {
+    public function getClassMetadata()
+    {
         trigger_error(__METHOD__ . ' method not supported. ');
         return null;
     }
@@ -36,7 +38,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return \Doctrine\ORM\Query\ResultSetMapping
      */
-    public function getResultSetMapping() {
+    public function getResultSetMapping()
+    {
         trigger_error(__METHOD__ . ' method not supported. ');
         return null;
     }
@@ -46,7 +49,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return array
      */
-    public function getInserts() {
+    public function getInserts()
+    {
         trigger_error(__METHOD__ . ' method not supported. ');
         return null;
     }
@@ -59,7 +63,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return string
      */
-    public function getInsertSQL() {
+    public function getInsertSQL()
+    {
         trigger_error(__METHOD__ . ' method not supported. ');
         return null;
     }
@@ -76,7 +81,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return string
      */
-    public function getSelectSQL($criteria, $assoc = null, $lockMode = null, $limit = null, $offset = null, array $orderBy = null) {
+    public function getSelectSQL($criteria, $assoc = null, $lockMode = null, $limit = null, $offset = null, array $orderBy = null)
+    {
         // TODO: Implement getSelectSQL() method.
     }
 
@@ -86,7 +92,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      * @param  array|\Doctrine\Common\Collections\Criteria $criteria
      * @return string
      */
-    public function getCountSQL($criteria = array()) {
+    public function getCountSQL($criteria = array())
+    {
         // TODO: Implement getCountSQL() method.
     }
 
@@ -97,7 +104,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return array
      */
-    public function expandParameters($criteria) {
+    public function expandParameters($criteria)
+    {
         // TODO: Implement expandParameters() method.
     }
 
@@ -108,7 +116,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return array
      */
-    public function expandCriteriaParameters(Criteria $criteria) {
+    public function expandCriteriaParameters(Criteria $criteria)
+    {
         // TODO: Implement expandCriteriaParameters() method.
     }
 
@@ -122,7 +131,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return string
      */
-    public function getSelectConditionStatementSQL($field, $value, $assoc = null, $comparison = null) {
+    public function getSelectConditionStatementSQL($field, $value, $assoc = null, $comparison = null)
+    {
         // TODO: Implement getSelectConditionStatementSQL() method.
     }
 
@@ -134,7 +144,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return void
      */
-    public function addInsert($entity) {
+    public function addInsert($entity)
+    {
         // TODO: Implement addInsert() method.
     }
 
@@ -147,7 +158,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      * @return array An array of any generated post-insert IDs. This will be an empty array
      *               if the entity class does not use the IDENTITY generation strategy.
      */
-    public function executeInserts() {
+    public function executeInserts()
+    {
         // TODO: Implement executeInserts() method.
     }
 
@@ -159,7 +171,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return void
      */
-    public function update($entity) {
+    public function update($entity)
+    {
         // TODO: Implement update() method.
     }
 
@@ -175,7 +188,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return bool TRUE if the entity got deleted in the database, FALSE otherwise.
      */
-    public function delete($entity) {
+    public function delete($entity)
+    {
         // TODO: Implement delete() method.
     }
 
@@ -186,7 +200,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return int
      */
-    public function count($criteria = array()) {
+    public function count($criteria = array())
+    {
         // TODO: Implement count() method.
     }
 
@@ -201,7 +216,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return string The table name.
      */
-    public function getOwningTable($fieldName) {
+    public function getOwningTable($fieldName)
+    {
         // TODO: Implement getOwningTable() method.
     }
 
@@ -222,7 +238,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @todo Check identity map? loadById method? Try to guess whether $criteria is the id?
      */
-    public function load(array $criteria, $entity = null, $assoc = null, array $hints = array(), $lockMode = null, $limit = null, array $orderBy = null) {
+    public function load(array $criteria, $entity = null, $assoc = null, array $hints = array(), $lockMode = null, $limit = null, array $orderBy = null)
+    {
         // TODO: Implement load() method.
     }
 
@@ -236,7 +253,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @todo Check parameters
      */
-    public function loadById(array $_id, $entity = null) {
+    public function loadById(array $_id, $entity = null)
+    {
         // TODO: Implement loadById() method.
     }
 
@@ -254,7 +272,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @throws \Doctrine\ORM\Mapping\MappingException
      */
-    public function loadOneToOneEntity(array $assoc, $sourceEntity, array $identifier = array()) {
+    public function loadOneToOneEntity(array $assoc, $sourceEntity, array $identifier = array())
+    {
         // TODO: Implement loadOneToOneEntity() method.
     }
 
@@ -270,7 +289,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return void
      */
-    public function refresh(array $id, $entity, $lockMode = null) {
+    public function refresh(array $id, $entity, $lockMode = null)
+    {
         // TODO: Implement refresh() method.
     }
 
@@ -281,7 +301,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return array
      */
-    public function loadCriteria(Criteria $criteria) {
+    public function loadCriteria(Criteria $criteria)
+    {
         // TODO: Implement loadCriteria() method.
     }
 
@@ -295,7 +316,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return array
      */
-    public function loadAll(array $criteria = array(), array $orderBy = null, $limit = null, $offset = null) {
+    public function loadAll(array $criteria = array(), array $orderBy = null, $limit = null, $offset = null)
+    {
         // TODO: Implement loadAll() method.
     }
 
@@ -309,7 +331,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return array
      */
-    public function getManyToManyCollection(array $assoc, $sourceEntity, $offset = null, $limit = null) {
+    public function getManyToManyCollection(array $assoc, $sourceEntity, $offset = null, $limit = null)
+    {
         // TODO: Implement getManyToManyCollection() method.
     }
 
@@ -322,7 +345,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return array
      */
-    public function loadManyToManyCollection(array $assoc, $sourceEntity, PersistentCollection $collection) {
+    public function loadManyToManyCollection(array $assoc, $sourceEntity, PersistentCollection $collection)
+    {
         // TODO: Implement loadManyToManyCollection() method.
     }
 
@@ -335,7 +359,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return array
      */
-    public function loadOneToManyCollection(array $assoc, $sourceEntity, PersistentCollection $collection) {
+    public function loadOneToManyCollection(array $assoc, $sourceEntity, PersistentCollection $collection)
+    {
         // TODO: Implement loadOneToManyCollection() method.
     }
 
@@ -347,7 +372,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return void
      */
-    public function lock(array $criteria, $lockMode) {
+    public function lock(array $criteria, $lockMode)
+    {
         // TODO: Implement lock() method.
     }
 
@@ -361,7 +387,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return array
      */
-    public function getOneToManyCollection(array $assoc, $sourceEntity, $offset = null, $limit = null) {
+    public function getOneToManyCollection(array $assoc, $sourceEntity, $offset = null, $limit = null)
+    {
         // TODO: Implement getOneToManyCollection() method.
     }
 
@@ -373,7 +400,8 @@ abstract class AbstractEntityPersister implements EntityPersister {
      *
      * @return boolean TRUE if the entity exists in the database, FALSE otherwise.
      */
-    public function exists($entity, Criteria $extraConditions = null) {
+    public function exists($entity, Criteria $extraConditions = null)
+    {
         // TODO: Implement exists() method.
     }
 }

@@ -25,12 +25,13 @@ namespace DoctrineElastic\Elastic;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-final class DoctrineElasticEvents {
-
+final class DoctrineElasticEvents
+{
     /**
      * Private constructor. This class is not meant to be instantiated.
      */
-    private function __construct() {
+    private function __construct()
+    {
     }
 
     const beforeInsert = 'beforeInsert';

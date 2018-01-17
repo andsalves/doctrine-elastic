@@ -7,8 +7,8 @@ namespace DoctrineElastic\Elastic;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-interface SearchParamsInterface {
-
+interface SearchParamsInterface
+{
     public function getIndex();
     public function setIndex($index);
 

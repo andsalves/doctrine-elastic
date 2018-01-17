@@ -15,7 +15,8 @@ use DoctrineElastic\Traiting\ErrorGetterTrait;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class ElasticConnection implements ElasticConnectionInterface {
+class ElasticConnection implements ElasticConnectionInterface
+{
 
     use ErrorGetterTrait;
 
@@ -28,11 +29,19 @@ class ElasticConnection implements ElasticConnectionInterface {
     /** @var float */
     protected $esVersion;
 
-    public function __construct(array $hosts) {
+    /**
+     * ElasticConnection constructor.
+     * @param array $hosts
+     * @throws ConnectionException
+     */
+    public function __construct(array $hosts)
+    {
         $this->curlRequest = new CurlRequest();
         $baseHost = reset($hosts);
 
-        if (empty($baseHost) || !is_string($baseHost) || !preg_match('/http/', $baseHost)) {
+        if (empty($baseHost)
+            || ! is_string($baseHost)
+            || ! preg_match('/http/', $baseHost)) {
             throw new ConnectionException("Elasticsearch host is invalid. ");
         }
 
@@ -48,16 +57,22 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @return bool
      */
     public function createIndex(
-        $index, array $mappings = null, array $settings = null, array $aliases = null, array &$return = null
-    ) {
+        $index,
+        array $mappings = null,
+        array $settings = null,
+        array $aliases = null,
+        array &$return = null)
+    {
         if ($this->indexExists($index)) {
-            throw new \InvalidArgumentException(sprintf("'%s' index already exists", $index));
+            throw new \InvalidArgumentException(
+                sprintf("'%s' index already exists", $index));
         }
 
         $params = [];
 
         if (is_array($mappings) && !empty($mappings)) {
-            $params['mappings'] = MappingHelper::patchMappings($mappings, floor($this->getElasticsearchVersion()));
+            $params['mappings'] = MappingHelper::patchMappings(
+                $mappings, floor($this->getElasticsearchVersion()));
         }
 
         if (is_array($settings) && !empty($settings)) {
@@ -86,7 +101,8 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @return bool
      * @throws ElasticOperationException
      */
-    public function deleteIndex($index, array &$return = null) {
+    public function deleteIndex($index, array &$return = null)
+    {
         if (is_string($index) && !strstr('_all', $index) && !strstr('*', $index)) {
             $response = $this->curlRequest->request("$index?refresh=true", [], 'DELETE');
             $return = $response['content'];
@@ -115,7 +131,8 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @return bool
      * @throws ElasticOperationException
      */
-    public function createType($index, $type, array $mappings = [], array &$return = null) {
+    public function createType($index, $type, array $mappings = [], array &$return = null)
+    {
         if (!$this->indexExists($index)) {
             throw new \InvalidArgumentException(sprintf("%s' index does not exists", $index));
         }
@@ -150,7 +167,8 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @param array|null $return
      * @return bool
      */
-    public function insert($index, $type, array $body, array $queryParams = [], array &$return = null) {
+    public function insert($index, $type, array $body, array $queryParams = [], array &$return = null)
+    {
         $url = "$index/$type";
         if (isset($body['_id'])) {
             $url .= '/' . $body['_id'];
@@ -183,7 +201,8 @@ class ElasticConnection implements ElasticConnectionInterface {
      *
      * @return bool
      */
-    public function update($index, $type, $_id, array $body = [], array $queryParams = [], array &$return = null) {
+    public function update($index, $type, $_id, array $body = [], array $queryParams = [], array &$return = null)
+    {
         if (!$this->indexExists($index)) {
             return false;
         }
@@ -217,7 +236,8 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @param array|null $return
      * @return bool
      */
-    public function delete($index, $type, $_id, array $queryParams = [], array &$return = null) {
+    public function delete($index, $type, $_id, array $queryParams = [], array &$return = null)
+    {
         if (!$this->indexExists($index)) {
             return false;
         }
@@ -240,11 +260,25 @@ class ElasticConnection implements ElasticConnectionInterface {
         return false;
     }
 
-    public function updateWhere($index, $type, array $where, array &$return = null) {
+    /**
+     * @param $index
+     * @param $type
+     * @param array $where
+     * @param array|null $return
+     */
+    public function updateWhere($index, $type, array $where, array &$return = null)
+    {
         // TODO
     }
 
-    public function deleteWhere($index, $type, array $where, array &$return = null) {
+    /**
+     * @param $index
+     * @param $type
+     * @param array $where
+     * @param array|null $return
+     */
+    public function deleteWhere($index, $type, array $where, array &$return = null)
+    {
         // TODO
     }
 
@@ -257,7 +291,8 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @param array|null $return
      * @return array|null
      */
-    public function get($index, $type, $_id, array $queryParams = [], array &$return = null) {
+    public function get($index, $type, $_id, array $queryParams = [], array &$return = null)
+    {
         if (!$this->indexExists($index)) {
             return null;
         }
@@ -287,16 +322,18 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @param array|null $return
      * @return array
      */
-    public function search($index, $type, array $body = [], array $queryParams = [], array &$return = null) {
+    public function search($index, $type, array $body = [], array $queryParams = [], array &$return = null)
+    {
         if (!$this->indexExists($index)) {
             return [];
         }
-        
-        $queryParams = array_replace_recursive([
-            'size' => self::DEFAULT_MAX_RESULTS
-        ], array_filter($queryParams, function ($value) {
-            return $value !== null;
-        }));
+
+        $queryParams = array_replace_recursive(
+            ['size' => self::DEFAULT_MAX_RESULTS],
+            array_filter($queryParams, function ($value) {
+                return $value !== null;
+            })
+        );
 
         $body = $this->unsetEmpties($body);
 
@@ -353,13 +390,12 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @return array|bool
      * @throws InvalidParamsException
      */
-    public function bulk($action, $index, $type, array $data = null) {
+    public function bulk($action, $index, $type, array $data = null)
+    {
         $bulkData = '';
 
         if (!in_array($action, ['create', 'index', 'update']) && !is_array($data)) {
-            throw new InvalidParamsException(
-                "\$data param must be an array for '$action' bulk action"
-            );
+            throw new InvalidParamsException("\$data param must be an array for '$action' bulk action");
         }
 
         switch ($action) {
@@ -381,9 +417,7 @@ class ElasticConnection implements ElasticConnectionInterface {
             case 'delete':
                 foreach ($data as $doc) {
                     if (!isset($doc['_id'])) {
-                        throw new InvalidParamsException(
-                            "_id field must be provided for each item in \$data param for $action action"
-                        );
+                        throw new InvalidParamsException("_id field must be provided for each item in \$data param for $action action");
                     }
 
                     $actionParams = ['_index' => $index, '_type' => $type, '_id' => $doc['_id']];
@@ -403,14 +437,10 @@ class ElasticConnection implements ElasticConnectionInterface {
             default:
                 $bulkActions = ['index', 'create', 'delete', 'update'];
 
-                throw new InvalidParamsException(
-                    "Invalid 'action' param provided. Must be one of those: " . implode('|', $bulkActions)
-                );
+                throw new InvalidParamsException("Invalid 'action' param provided. Must be one of those: " . implode('|', $bulkActions));
         }
 
-        $response = $this->curlRequest->request("/_bulk", $bulkData, 'POST', [
-            'Content-Type: application/x-ndjson; charset=utf-8'
-        ]);
+        $response = $this->curlRequest->request("/_bulk", $bulkData, 'POST', ['Content-Type: application/x-ndjson; charset=utf-8']);
 
         if (isset($response['status']) && $response['status'] == 200) {
             return $response['content'];
@@ -421,7 +451,12 @@ class ElasticConnection implements ElasticConnectionInterface {
         return false;
     }
 
-    private function unsetEmpties(array $haystack) {
+    /**
+     * @param array $haystack
+     * @return array
+     */
+    private function unsetEmpties(array $haystack)
+    {
         $selfFn = __FUNCTION__;
 
         foreach ($haystack as $key => $value) {
@@ -441,7 +476,8 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @param string $index
      * @return bool
      */
-    public function indexExists($index) {
+    public function indexExists($index)
+    {
         $response = $this->curlRequest->request($index, [], 'HEAD');
 
         return $response['status'] === 200;
@@ -452,13 +488,20 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @param string $type
      * @return bool
      */
-    public function typeExists($index, $type) {
+    public function typeExists($index, $type)
+    {
         $response = $this->curlRequest->request("$index/$type", [], 'HEAD');
 
         return $response['status'] === 200;
     }
 
-    private function throwExceptionFromResponse($response, $appendPrefix = '') {
+    /**
+     * @param $response
+     * @param string $appendPrefix
+     * @throws ElasticOperationException
+     */
+    private function throwExceptionFromResponse($response, $appendPrefix = '')
+    {
         if (isset($response['content']['error']['reason'])) {
             if (!empty($appendPrefix)) {
                 $appendPrefix .= ': ';
@@ -468,13 +511,21 @@ class ElasticConnection implements ElasticConnectionInterface {
         }
     }
 
-    public function hasConnection() {
+    /**
+     * @return bool
+     */
+    public function hasConnection()
+    {
         $response = $this->curlRequest->request('', [], 'HEAD');
 
         return $response['status'] == 200;
     }
 
-    private function setErrorFromElasticReturn($return) {
+    /**
+     * @param $return
+     */
+    private function setErrorFromElasticReturn($return)
+    {
         if (isset($return['error']['root_cause'][0]['reason'])) {
             $this->setError($return['error']['root_cause'][0]['reason']);
         } else if (isset($return['error']['reason'])) {
@@ -482,7 +533,12 @@ class ElasticConnection implements ElasticConnectionInterface {
         }
     }
 
-    public function getElasticsearchVersion() {
+    /**
+     * @return float
+     * @throws ConnectionException
+     */
+    public function getElasticsearchVersion()
+    {
         if (is_null($this->esVersion)) {
             $response = $this->curlRequest->request('', [], 'GET');
 

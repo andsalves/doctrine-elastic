@@ -6,8 +6,8 @@ namespace DoctrineElastic\Connection;
  * Interface for elastic connection implementation
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-interface ElasticConnectionInterface {
-
+interface ElasticConnectionInterface
+{
     /**
      * @param string $index
      * @param array|null $mappings
@@ -17,7 +17,11 @@ interface ElasticConnectionInterface {
      * @return bool
      */
     public function createIndex(
-        $index, array $mappings = null, array $settings = null, array $aliases = null, array &$return = null
+        $index,
+        array $mappings = null,
+        array $settings = null,
+        array $aliases = null,
+        array &$return = null
     );
 
     /**
@@ -67,8 +71,20 @@ interface ElasticConnectionInterface {
      */
     public function delete($index, $type, $_id, array $mergeParams = [], array &$return = null);
 
+    /**
+     * @param $index
+     * @param $type
+     * @param array $where
+     * @return mixed
+     */
     public function updateWhere($index, $type, array $where);
 
+    /**
+     * @param $index
+     * @param $type
+     * @param array $where
+     * @return mixed
+     */
     public function deleteWhere($index, $type, array $where);
 
     /**

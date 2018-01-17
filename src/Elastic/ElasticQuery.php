@@ -19,8 +19,8 @@ use DoctrineElastic\Query\ElasticQueryExecutor;
  *
  * @author Andsalves <ands.alves.nunes@gmail.com>
  */
-class ElasticQuery {
-
+class ElasticQuery
+{
     /** @var ElasticEntityManager */
     protected $entityManager;
 
@@ -39,12 +39,14 @@ class ElasticQuery {
     /** @var array */
     protected $_parameters;
 
-    public function __construct(ElasticEntityManager $entityManager) {
+    public function __construct(ElasticEntityManager $entityManager)
+    {
         $this->entityManager = $entityManager;
         $this->queryExecutor = new ElasticQueryExecutor($entityManager);
     }
 
-    public function getResult() {
+    public function getResult()
+    {
 
         $parser = new QueryParser($this);
         $searchParams = $parser->parseElasticQuery();
@@ -52,22 +54,26 @@ class ElasticQuery {
         return $this->queryExecutor->execute($searchParams, $parser->getRootClass());
     }
 
-    public function getDQL() {
+    public function getDQL()
+    {
         return $this->_dql;
     }
 
-    public function setDQL($dql) {
+    public function setDQL($dql)
+    {
         $this->_dql = $dql;
     }
 
-    protected function processParameterMappings($paramMappings) {
+    protected function processParameterMappings($paramMappings)
+    {
 
     }
 
     /**
      * @return mixed
      */
-    public function getParameters() {
+    public function getParameters()
+    {
         return $this->_parameters;
     }
 
@@ -75,40 +81,48 @@ class ElasticQuery {
      * @param mixed $parameters
      * @return ElasticQuery
      */
-    public function setParameters($parameters) {
+    public function setParameters($parameters)
+    {
         $this->_parameters = $parameters;
         return $this;
     }
 
-    public function setFirstResult($offset) {
+    public function setFirstResult($offset)
+    {
         $this->_firstResult = $offset;
         return $this;
     }
 
-    public function setMaxResults($limit) {
+    public function setMaxResults($limit)
+    {
         $this->_maxResults = $limit;
         return $this;
     }
 
-    public function getFirstResult() {
+    public function getFirstResult()
+    {
         return $this->_firstResult;
     }
 
-    public function getMaxResults() {
+    public function getMaxResults()
+    {
         return $this->_maxResults;
     }
 
-    public function getEntityManager() {
+    public function getEntityManager()
+    {
         return $this->entityManager;
     }
 
-    public function getOneOrNullResult() {
+    public function getOneOrNullResult()
+    {
         $results = $this->getResult();
 
         return count($results) ? reset($results) : null;
     }
 
-    public function getSingleResult() {
+    public function getSingleResult()
+    {
         return $this->getOneOrNullResult();
     }
 }
