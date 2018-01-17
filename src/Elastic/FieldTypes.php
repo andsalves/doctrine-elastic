@@ -34,7 +34,7 @@ class FieldTypes {
     const ATTACHMENT = 'attachment';
 
 
-    public static $types = array(
+    public static $types = [
         self::STRING,
         self::TEXT,
         self::KEYWORD,
@@ -55,5 +55,5 @@ class FieldTypes {
         self::COMPLETION,
         self::MURMUR3,
         self::ATTACHMENT
-    );
+    ];
 }

@@ -32,6 +32,10 @@ class SearchParser {
             $elasticQuerySearch['body']['sort'][] = [$field => $value];
         }
 
+        foreach ($searchParams->getAggregate() as $field => $value) {
+            $elasticQuerySearch['body']['aggs'][] = [$field => $value];
+        }
+
         if ($searchParams->getFrom()) {
             $elasticQuerySearch['from'] = $searchParams->getFrom();
         }
