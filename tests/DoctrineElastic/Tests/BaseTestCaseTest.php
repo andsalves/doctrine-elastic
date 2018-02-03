@@ -5,18 +5,21 @@ namespace DoctrineElastic\Tests;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use DoctrineElastic\Connection\ElasticConnection;
 use DoctrineElastic\ElasticEntityManager;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Base class for PhpUnit test classes
  *
  * @author Ands
  */
-abstract class BaseTestCaseTest extends \PHPUnit\Framework\TestCase {
+abstract class BaseTestCaseTest extends TestCase {
 
     private static $esVersionPrinted = false;
 
     /** @var ElasticEntityManager */
     protected static $_elasticEntityManager;
+
+    protected $defaultHost = 'http://localhost:9200';
 
     public function __construct($name = null, array $data = [], $dataName = '') {
         parent::__construct($name, $data, $dataName);
@@ -46,18 +49,22 @@ abstract class BaseTestCaseTest extends \PHPUnit\Framework\TestCase {
             AnnotationRegistry::registerFile(getcwd() . '/vendor/doctrine/orm/lib/Doctrine/ORM/Mapping/Driver/DoctrineAnnotations.php');
             AnnotationRegistry::registerFile(getcwd() . '/src/Mapping/Driver/ElasticAnnotations.php');
 
-            $esRootVersion = strval(getenv('ELASTICSEARCH_ROOT_VERSION'));
+            $esRootVersion = getenv('ELASTICSEARCH_ROOT_VERSION');
 
-            $hosts = array(
-                getenv("ELASTICSEARCH{$esRootVersion}_TESTS_HTTP"),
-                getenv("ELASTICSEARCH{$esRootVersion}_TESTS_HTTPS")
-            );
+            $host = getenv("ELASTICSEARCH{$esRootVersion}_TESTS_HTTP");
 
-            if (is_null($hosts[0])) {
-                throw new \Exception('Unable to get environment vars for elasticsearch tests. ');
+            if (!$host) {
+                trigger_error(
+                    'Unable to get environment vars for elasticsearch tests. '
+                    . 'Setting default host as ' . $this->defaultHost
+                );
+
+                $host = $this->defaultHost;
             }
 
-            $conn = new ElasticConnection($hosts);
+            print "\nElasticsearch host set up to $host";
+
+            $conn = new ElasticConnection($host, $esRootVersion);
 
             self::$_elasticEntityManager = new ElasticEntityManager($conn);
         }

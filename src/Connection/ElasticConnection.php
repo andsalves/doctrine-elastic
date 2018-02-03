@@ -4,7 +4,9 @@ namespace DoctrineElastic\Connection;
 
 use DoctrineElastic\Exception\ConnectionException;
 use DoctrineElastic\Exception\ElasticOperationException;
+use DoctrineElastic\Exception\InvalidIndexNameException;
 use DoctrineElastic\Exception\InvalidParamsException;
+use DoctrineElastic\Helper\IndexHelper;
 use DoctrineElastic\Helper\MappingHelper;
 use DoctrineElastic\Http\CurlRequest;
 use DoctrineElastic\Traiting\ErrorGetterTrait;
@@ -28,15 +30,19 @@ class ElasticConnection implements ElasticConnectionInterface {
     /** @var float */
     protected $esVersion;
 
-    public function __construct(array $hosts) {
+    public function __construct($host, $version = null) {
         $this->curlRequest = new CurlRequest();
-        $baseHost = reset($hosts);
+        $baseHost = is_array($host) ? reset($host) : $host;
 
         if (empty($baseHost) || !is_string($baseHost) || !preg_match('/http/', $baseHost)) {
             throw new ConnectionException("Elasticsearch host is invalid. ");
         }
 
         $this->curlRequest->setBaseUrl($baseHost);
+
+        if (!is_null($version)) {
+            $this->esVersion = $version;
+        }
     }
 
     /**
@@ -87,7 +93,7 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @throws ElasticOperationException
      */
     public function deleteIndex($index, array &$return = null) {
-        if (is_string($index) && !strstr('_all', $index) && !strstr('*', $index)) {
+        if (boolval($index) && is_string($index) && !strstr('_all', $index) && $index != '*') {
             $response = $this->curlRequest->request("$index?refresh=true", [], 'DELETE');
             $return = $response['content'];
 
@@ -99,7 +105,8 @@ class ElasticConnection implements ElasticConnectionInterface {
                 return $return['acknowledged'];
             }
         } else {
-            throw new ElasticOperationException('Index name is invalid for deletion. ');
+            $this->setError("Index name is invalid for deletion. Index name: '$index'");
+            return false;
         }
 
         $this->setErrorFromElasticReturn($return);
@@ -291,7 +298,7 @@ class ElasticConnection implements ElasticConnectionInterface {
         if (!$this->indexExists($index)) {
             return [];
         }
-        
+
         $queryParams = array_replace_recursive([
             'size' => self::DEFAULT_MAX_RESULTS
         ], array_filter($queryParams, function ($value) {
@@ -442,6 +449,8 @@ class ElasticConnection implements ElasticConnectionInterface {
      * @return bool
      */
     public function indexExists($index) {
+        $this->validateIndex($index);
+
         $response = $this->curlRequest->request($index, [], 'HEAD');
 
         return $response['status'] === 200;
@@ -479,6 +488,15 @@ class ElasticConnection implements ElasticConnectionInterface {
             $this->setError($return['error']['root_cause'][0]['reason']);
         } else if (isset($return['error']['reason'])) {
             $this->setError($return['error']['reason']);
+        }
+    }
+
+    private function validateIndex($index) {
+        if (!IndexHelper::indexIsValid($index)) {
+            throw new InvalidIndexNameException(sprintf(
+                "The index name '$index' is invalid. It must not be empty or contain the following characters: [%s]",
+                implode(',', IndexHelper::$invalidIndexCharacters)
+            ));
         }
     }
 

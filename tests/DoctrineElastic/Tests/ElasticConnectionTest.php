@@ -4,7 +4,10 @@ namespace DoctrineElastic\Tests;
 
 use DoctrineElastic\Connection\ElasticConnection;
 use DoctrineElastic\ElasticEntityManager;
+use DoctrineElastic\Exception\ElasticOperationException;
+use DoctrineElastic\Exception\InvalidIndexNameException;
 use DoctrineElastic\Exception\InvalidParamsException;
+use DoctrineElastic\Tests\StaticProvider\TestsDataProvider;
 
 /**
  * Test class to test ElasticConnection
@@ -30,6 +33,25 @@ class ElasticConnectionTest extends BaseTestCaseTest {
             ElasticConnection::class, $connection,
             sprintf("Failed to get an instance of %s", ElasticEntityManager::class)
         );
+    }
+
+    /** @depends testClientConnect */
+    public function testCreateIndexInvalidName() {
+        $connection = $this->_getEntityManager()->getConnection();
+
+        foreach (TestsDataProvider::$invalidIndexNames as $indexName) {
+            try {
+                $created = $connection->createIndex($indexName);
+
+                $this->assertFalse($created, printf(
+                    "\nIndex with invalid name has returned true (boolean) on creation attempt: %s\n", $indexName
+                ));
+            } catch (\Exception $exception) {
+                $this->assertInstanceOf(
+                    InvalidIndexNameException::class, $exception, 'Invalid Exception was thrown during index creation'
+                );
+            }
+        }
     }
 
     /** @depends testClientConnect */
@@ -84,8 +106,21 @@ class ElasticConnectionTest extends BaseTestCaseTest {
     }
 
     protected static function clearIndices() {
-        if (self::$_elasticEntityManager->getConnection()->indexExists('tests')) {
-            self::$_elasticEntityManager->getConnection()->deleteIndex('tests');
+        $deleteStack = array_values(TestsDataProvider::$invalidIndexNames);
+        array_push($deleteStack, 'tests');
+
+        foreach ($deleteStack as $indexName) {
+            try {
+                $usable = !empty($indexName) && $indexName != '*';
+
+                if ($usable && self::$_elasticEntityManager->getConnection()->indexExists($indexName)) {
+                    self::$_elasticEntityManager->getConnection()->deleteIndex($indexName);
+                }
+            } catch (ElasticOperationException $exception) {
+                print "\n" . $exception->getMessage() . "\n";
+            } catch (InvalidIndexNameException $exception) {
+                // It's ok, cannot delete an invalid one
+            }
         }
     }
 

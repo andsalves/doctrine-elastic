@@ -130,9 +130,9 @@ class ElasticEntityPersister {
         if (is_array($orderBy)) {
             foreach ($orderBy as $columnName => $order) {
                 if (isset($fieldAnnotations[$columnName])) {
-                    $sort[$fieldAnnotations[$columnName]->name] = ['order' => $order];
+                    $sort[$fieldAnnotations[$columnName]->name] = ['order' => strtolower($order)];
                 } else if (isset($metaFieldAnnotations[$columnName])) {
-                    $sort[$metaFieldAnnotations[$columnName]->name] = ['order' => $order];
+                    $sort[$metaFieldAnnotations[$columnName]->name] = ['order' => strtolower($order)];
                 }
             }
         }
