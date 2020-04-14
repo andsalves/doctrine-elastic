@@ -5,12 +5,13 @@ Doctrine Adaptation Library for Elasticsearch.
 
 Last stable release: v1.3.1 (Elasticsearch 2.x or 5.x support)
 Tests on Elasticsearch 2.4.1/5.1/5.5 - PHP 5.6/7.0
+*This library is not actively maintained anymore*
 
 ## Get Started
 
 ### Creating a working ElasticEntityManager
 
-Please see at https://github.com/andsalves/doctrine-elastic/blob/master/docs/creating-an-elastic-entity-manager-instance.md
+Please see https://github.com/andsalves/doctrine-elastic/blob/master/docs/creating-an-elastic-entity-manager-instance.md
 
 ### Creating a working DoctrineElastic Entity
 Just like Doctrine, we need to set some annotations in our entities, here is an example:
@@ -110,14 +111,12 @@ class FooType {
     }
 }
 ```
-This entity represents, in Elasticsearch, a type named 'foo_type', that belongs to an index named 'foo_index'. Note the class annotation @ElasticORM\Type with these informations. The property annotation @ElasticORM\Field represents a field from _source of a document into 'foo_type' type. @ElasticORM\MetaField annotation represents a metafield, like _id. @ElasticORM\MetaField _id is required for an entity, and must be a public property.
+This entity represents, in Elasticsearch, a type named 'foo_type', that belongs to an index named 'foo_index'. Note the class annotation @ElasticORM\Type with these definitions. The property annotation @ElasticORM\Field represents a field from the _source of a document inside the 'foo_type' type. The @ElasticORM\MetaField annotation represents a metafield, like _id. @ElasticORM\MetaField _id is required for an entity, and must be a public property.
 
-Only properties with @ElasticORM\Field annotation will be considered as document fields. In elasticsearch, the document column name will be the 'name' property from @ElasticORM\Field annotation from class property, just like 'type' annotation property.
-
-A more detailed explanation about fields customization and types (just like nested and date types, 'format' annotation property etc), will be available soon. 
+Only properties with @ElasticORM\Field annotation will be considered document fields. In elasticsearch, the document column name will be the 'name' property from @ElasticORM\Field annotation from the class property, just like the 'type' annotation property.
 
 ### Inserting Documents
-Now, is very simple to make CRUD operations through ElasticEntityManager. 
+With this library, making CRUD operations through ElasticEntityManager is really simple. 
 Assuming you have an ElasticEntityManager instance in a variable called $elasticEntityManager:
 ```php
 $newFoo = new DoctrineElastic\Entity\FooType(); // Or wherever be your entity
@@ -129,17 +128,17 @@ $elasticEntityManager->persist($newFoo); // Persisting entity...
 $elasticEntityManager->flush(); // And flushing... Oh God, just like Doctrine!
 ```
 ##### Note 1: 
-Index and type will be created automatically, as well as its mappings, if doesn't exist.
+Index and type will be created automatically, as well as their mappings, if don't exist yet.
 ##### Note 2: 
-By default, mappings for analyzable fields will be not_analyzed (index='not_analyzed'). DoctrineElastic was made to work this way. However, you can change it with 'index' @ElasticORM\Field annotation property, if you prefer default analized fields. e.g. @ElasticORM\Field(name='mad_field', type='string', index='analyzed'). Attention: Search documents with ElasticEntityManager is not guaranteed when you make this, once it isn't possible to match exact values always. 
+By default, mappings for analyzable fields will be not_analyzed (index='not_analyzed'). DoctrineElastic was made to work this way. However, you can change it with 'index' @ElasticORM\Field annotation property, if you prefer default analized fields. e.g. @ElasticORM\Field(name='mad_field', type='string', index='analyzed'). Attention: Search documents with ElasticEntityManager is not guaranteed when you do that, once it isn't always possible to match exact values. 
 ##### Note 3:
-DoctrineElastic does not accept TRANSACTIONS (yet). You will find an available 'beginTransaction' method in ElasticEntityManager, but it doesn't anything. It's there because ElasticEntityManager implements EntityManagerInterface from Doctrine. This happens with some few other methods. 
+DoctrineElastic does not accept TRANSACTIONS (yet). You will find an available 'beginTransaction' method in ElasticEntityManager, but it does nothing. It is there because ElasticEntityManager implements EntityManagerInterface from Doctrine. That happens with some few other methods. 
 
 ##### Note 4:
-Just like in Doctrine, after flush, the entity will have the _id field filled. If you persist an entity with _id field non null, DoctrineElastic will search a doc for update, if doesn't exist, creates this one with passed _id. 
+Just like in Doctrine, after flushing, the entity will have the _id field filled. If you persist an entity with _id field non null, DoctrineElastic will search a doc for update, if it doesn't exist, it's created with the provided _id. 
 
 ### Finding Documents
-If you really know Doctrine, this is very easy.
+If you know Doctrine, this is very easy and intuitive:
 ```php
 $myFoo = $elasticEntityManager->getRepository(DoctrineElastic\Entity\FooType::class)->findOneBy(['customNumericField' => 1234]);
 
@@ -168,27 +167,21 @@ if (!is_null($myFoo)) {
     print 'Nothing to remove';
 }
 ```
-### Using QueryBuilder
-Coming soon...
-For emergency, please see the tests for this feature, it's a good example: 
+### Using Query Builder
+Please see the tests for this feature as a good example: 
 https://github.com/andsalves/doctrine-elastic/blob/master/tests/DoctrineElastic/Tests/ElasticEntityManagerTest.php
 
 ### Parent-Child Relationship
-Coming soon...
-For emergency, please see the tests for this feature, it's a good example: 
+Please see the tests for this feature as a good example: 
 https://github.com/andsalves/doctrine-elastic/blob/master/tests/DoctrineElastic/Tests/ParentChildTest.php
 
 ### Application-side Relationships with DoctrineElastic
-You can simulate relational databases relationships, with loss of performance, obsiously. DoctrineElastic has this feature, but it is not recommended to use. 
-A documentation about this is coming soon... For emergency, please contact me. 
-
-### Customizing Results with DoctrineElastic Events
-Coming soon...
+You can simulate relational databases relationships, with loss of performance, obviously. DoctrineElastic has this feature as an internal feature development, but it is not recommended to be used - if you need complex relationships, you should use a relational database. If you'd really like to use relationships like that with this library, contact me for help.
 
 #
 #
 ###### For documentation missing clarification or any other doubt, please contact me ands.alves.nunes@gmail.com.
-###### You can open issues or make pull requests. 
+###### You can also open issues or make pull requests. 
 #
 #
 #
