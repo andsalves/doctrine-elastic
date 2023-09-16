@@ -1,5 +1,5 @@
 # Doctrine-Elastic
-Doctrine Adaptation Library for Elasticsearch.
+Custom Doctrine Library for Elasticsearch.
 
 [![Build Status](https://travis-ci.org/andsalves/doctrine-elastic.svg?branch=master)](https://travis-ci.org/andsalves/doctrine-elastic) [![Coverage Status](https://coveralls.io/repos/github/andsalves/doctrine-elastic/badge.svg)](https://coveralls.io/github/andsalves/doctrine-elastic) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/andsalves/doctrine-elastic/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/andsalves/doctrine-elastic/?branch=master)
 
@@ -16,7 +16,7 @@ Tests on Elasticsearch 2.4.1/5.1/5.5 - PHP 5.6/7.0
 Please see https://github.com/andsalves/doctrine-elastic/blob/master/docs/creating-an-elastic-entity-manager-instance.md
 
 ### Creating a working DoctrineElastic Entity
-Just like Doctrine, we need to set some annotations in our entities, here is an example:
+Just like Doctrine, we need to set some annotations in our entities, here's an example:
 ```php
 <?php
 namespace DoctrineElastic\Entity;
@@ -113,7 +113,7 @@ class FooType {
     }
 }
 ```
-This entity represents, in Elasticsearch, a type named 'foo_type', that belongs to an index named 'foo_index'. Note the class annotation @ElasticORM\Type with these definitions. The property annotation @ElasticORM\Field represents a field from the _source of a document inside the 'foo_type' type. The @ElasticORM\MetaField annotation represents a metafield, like _id. @ElasticORM\MetaField _id is required for an entity, and must be a public property.
+This entity represents, in Elasticsearch, a type named 'foo_type', that belongs to an index named 'foo_index'. Note the class annotation @ElasticORM\Type with these definitions. The property annotation @ElasticORM\Field represents a _source field of a document inside the 'foo_type' type. The @ElasticORM\MetaField annotation represents a metafield, like _id. @ElasticORM\MetaField _id is required for an entity, and must be a public property.
 
 Only properties with @ElasticORM\Field annotation will be considered document fields. In elasticsearch, the document column name will be the 'name' property from @ElasticORM\Field annotation from the class property, just like the 'type' annotation property.
 
@@ -182,8 +182,8 @@ You can simulate relational databases relationships, with loss of performance, o
 
 #
 #
-###### For documentation missing clarification or any other doubt, please contact me ands.alves.nunes@gmail.com.
-###### You can also open issues or make pull requests. 
+###### For questions, please contact me at ands.alves.nunes@gmail.com.
+###### Please feel free to open issues or make pull requests. 
 #
 #
 #
